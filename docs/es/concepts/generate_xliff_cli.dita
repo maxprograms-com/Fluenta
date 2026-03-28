@@ -53,7 +53,8 @@
     "paragraph": false,
     "ignoreTrackedChanges": false,
     "ignoreSVG": true,
-    "embedSkeleton": false
+    "embedSkeleton": false,
+    "maxThreads": 4    
 }
 </codeblock>
     <section>
@@ -124,9 +125,7 @@
             <row>
               <entry translate="no">version</entry>
               <entry>Texto</entry>
-              <entry>Seleccione la versión de XLIFF a generar. Valores: <codeph>1.2</codeph>,
-                  <codeph>2.0</codeph>, <codeph>2.1</codeph> o <codeph>2.2</codeph>. Valor
-                predeterminado: <codeph>2.1</codeph></entry>
+              <entry>Selecciona la versión de XLIFF a generar. Valores: <codeph>1.2</codeph>, <codeph>2.0</codeph>, <codeph>2.1</codeph> o <codeph>2.2</codeph>. Valor predeterminado: <codeph>2.1</codeph></entry>
               <entry>No</entry>
             </row>
             <row>
@@ -151,6 +150,12 @@
               <entry translate="no">embedSkeleton</entry>
               <entry>Booleano</entry>
               <entry>Selecciona si los esqueletos deben incrustarse en los archivos XLIFF generados, permitiendo la conversión de nuevo a DITA en cualquier ordenador que utilice <xref href="https://www.maxprograms.com/products/openxliff.html" scope="external" format="html">OpenXLIFF Filters</xref> o <xref href="https://www.maxprograms.com/products/xliffmanager.html" scope="external" format="html">XLIFF Manager</xref>. Valor predeterminado: <codeph>false</codeph></entry>
+              <entry>No</entry>
+            </row>
+            <row>
+              <entry translate="no">maxThreads</entry>
+              <entry>Número</entry>
+              <entry>Indica el número máximo de hilos que se utilizarán al generar XLIFF y aplicar la memoria de traducción. Valor predeterminado: el número de procesadores disponibles en el equipo.</entry>
               <entry>No</entry>
             </row>
           </tbody>

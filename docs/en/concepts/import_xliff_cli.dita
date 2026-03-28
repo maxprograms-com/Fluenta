@@ -4,7 +4,8 @@
   <title>Import XLIFF File</title>
   <shortdesc/>
   <conbody>
-    <p>Use the following parameters to import a translated XLIFF file into a project from the command line:</p>
+    <p>Use the following parameters to import a translated XLIFF file into a project from the
+      command line:</p>
     <table>
       <tgroup cols="4">
         <colspec colwidth="20*" align="center"/>
@@ -30,8 +31,7 @@
           <row>
             <entry translate="no">-verbose</entry>
             <entry/>
-            <entry>Selects whether progress information is logged or not in
-              stdout.</entry>
+            <entry>Selects whether progress information is logged or not in stdout.</entry>
             <entry>No</entry>
           </row>
         </tbody>
@@ -47,7 +47,8 @@
     "outputFolder": "C:\\sample data\\es\\",
     "updateTM": true,
     "acceptUnapproved": true,
-    "ignoreTagErrors": false
+    "ignoreTagErrors": false,
+    "maxThreads": 4
 }</codeblock>
     <section>
       <title>JSON Value Pairs</title>
@@ -105,6 +106,13 @@
                   <codeph>false</codeph> and errors are found, a detailed report in HTML format is
                 generated and stored in the folder that contains the XLIFF file. Default value:
                   <codeph>false</codeph></entry>
+              <entry>No</entry>
+            </row>
+            <row>
+              <entry translate="no">maxThreads</entry>
+              <entry>Number</entry>
+              <entry>Indicates the maximum number of threads to use when importing theXLIFF file.
+                Default value: the number of processors available in the computer.</entry>
               <entry>No</entry>
             </row>
           </tbody>

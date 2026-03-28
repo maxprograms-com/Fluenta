@@ -13,9 +13,8 @@
                                                   format="html" scope="external"
                                                   >https://github.com/rmraya/BCP47J</xref></li>
                                         <li>Published under <xref
-                                                  href="https://www.eclipse.org/org/documents/epl-v10.html"
-                                                  format="html" scope="external">Eclipse Public
-                                                  License 1.0</xref></li>
+                                                        href="https://github.com/rmraya/BCP47J/blob/main/LICENSE.md"
+                                                  format="html" scope="external">Custom License</xref></li>
                                 </ul>
                         </li>
                         <li><p translate="no"><b>Electron</b></p>
@@ -139,9 +138,8 @@
                                                   format="html" scope="external"
                                                   >https://github.com/rmraya/XMLJava</xref></li>
                                         <li>Published under <xref
-                                                  href="https://www.eclipse.org/org/documents/epl-v10.html"
-                                                  format="html" scope="external">Eclipse Public
-                                                  License 1.0</xref></li>
+                                                        href="https://github.com/rmraya/XMLJava/blob/main/LICENSE.md"
+                                                  format="html" scope="external">Custom License</xref></li>
                                 </ul>
                         </li>
                 </ul>

@@ -44,7 +44,8 @@
     "outputFolder": "C:\\sample data\\es\\",
     "updateTM": true,
     "acceptUnapproved": true,
-    "ignoreTagErrors": false
+    "ignoreTagErrors": false,
+    "maxThreads": 4
 }</codeblock>
     <section>
       <title>Pares de Valores JSON</title>
@@ -97,6 +98,12 @@
               <entry translate="no">ignoreTagErrors</entry>
               <entry>Booleano</entry>
               <entry>Selecciona si los errores de etiquetas deben ignorarse. Si se establece en <codeph>false</codeph> y se encuentran errores, se genera un informe detallado en formato HTML que se almacena en la carpeta que contiene el archivo XLIFF. Valor predeterminado: <codeph>false</codeph></entry>
+              <entry>No</entry>
+            </row>
+            <row>
+              <entry translate="no">maxThreads</entry>
+              <entry>Número</entry>
+              <entry>Indica el número máximo de hilos que se utilizarán al importar el archivo XLIFF. Valor predeterminado: el número de procesadores disponibles en el equipo.</entry>
               <entry>No</entry>
             </row>
           </tbody>

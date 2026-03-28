@@ -55,7 +55,8 @@
     "paragraph": false,
     "ignoreTrackedChanges": false,
     "ignoreSVG": true,
-    "embedSkeleton": false
+    "embedSkeleton": false,
+    "maxThreads": 4    
 }
 </codeblock>
   <section>
@@ -103,15 +104,14 @@
        <entry translate="no">useICE</entry>
        <entry>Boolean</entry>
        <entry>Selects whether existing ICE matches should be reused. Default
-                <codeph>false</codeph></entry>
+        <codeph>false</codeph></entry>
        <entry>No</entry>
       </row>
       <row>
        <entry translate="no">modifiedFilesOnly</entry>
        <entry>Boolean</entry>
        <entry>Selects whether topics that have not changed since the last translation cycle should
-                be included in the generated XLIFF files. Default value:
-                <codeph>false</codeph></entry>
+        be included in the generated XLIFF files. Default value: <codeph>false</codeph></entry>
        <entry>No</entry>
       </row>
       <row>
@@ -140,21 +140,21 @@
        <entry translate="no">paragraph</entry>
        <entry>Boolean</entry>
        <entry>Selects whether paragraph segmentation should be used instead of sentence
-                segmentation. Default value: <codeph>false</codeph></entry>
+        segmentation. Default value: <codeph>false</codeph></entry>
        <entry>No</entry>
       </row>
       <row>
        <entry translate="no">ignoreTrackedChanges</entry>
        <entry>Boolean</entry>
        <entry>Selects whether tracked changes from Oxygen XML Editor should be ignored. Default
-                value: <codeph>false</codeph></entry>
+        value: <codeph>false</codeph></entry>
        <entry>No</entry>
       </row>
       <row>
        <entry translate="no">ignoreSVG</entry>
        <entry>Boolean</entry>
        <entry>Selects whether translatable SVG files should be ignored when generating XLIFF.
-                Default value: <codeph>false</codeph></entry>
+        Default value: <codeph>false</codeph></entry>
        <entry>No</entry>
       </row>
       <row>
@@ -168,7 +168,14 @@
          scope="external">XLIFF Manager</xref>. Default value: <codeph>false</codeph></entry>
        <entry>No</entry>
       </row>
-
+      <row>
+       <entry translate="no">maxThreads</entry>
+       <entry>Number</entry>
+       <entry>Indicates the maximum number of threads to use when generating XLIFF and applying
+        translation memory. Default value: the number of processors available in the
+        computer.</entry>
+       <entry>No</entry>
+      </row>
      </tbody>
     </tgroup>
    </table>

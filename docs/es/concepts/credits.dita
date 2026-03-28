@@ -11,7 +11,7 @@
         </p>
         <ul>
           <li>Disponible en <xref href="https://github.com/rmraya/BCP47J" scope="external" format="html">https://github.com/rmraya/BCP47J</xref></li>
-          <li>Publicado bajo la <xref href="https://www.eclipse.org/org/documents/epl-v10.html" scope="external" format="html">Licencia Pública Eclipse 1.0</xref></li>
+          <li>Publicado bajo <xref href="https://github.com/rmraya/BCP47J/blob/main/LICENSE.md" scope="external" format="html">Licencia Personalizada</xref></li>
         </ul>
       </li>
       <li>
@@ -109,8 +109,8 @@
           <b>XMLJava</b>
         </p>
         <ul>
-          <li>Available from <xref href="https://github.com/rmraya/XMLJava" scope="external" format="html">https://github.com/rmraya/XMLJava</xref></li>
-          <li>Publicado bajo la <xref href="https://www.eclipse.org/org/documents/epl-v10.html" scope="external" format="html">Licencia Pública Eclipse 1.0</xref></li>
+          <li>Disponible en <xref href="https://github.com/rmraya/XMLJava" scope="external" format="html">https://github.com/rmraya/XMLJava</xref></li>
+          <li>Publicado bajo <xref href="https://github.com/rmraya/XMLJava/blob/main/LICENSE.md" scope="external" format="html">Licencia Personalizada</xref></li>
         </ul>
       </li>
     </ul>
