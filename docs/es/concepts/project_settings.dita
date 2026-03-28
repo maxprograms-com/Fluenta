@@ -19,9 +19,10 @@
       <li>Para cambiar el archivo <xref href="../glossaries/SRX.dita">SRX</xref> (Segmentation Rules eXchange) predeterminado que Fluenta utiliza para segmentar archivos XLIFF: <ol>
           <li>Escriba el nombre del archivo SRX en el cuadro de texto <uicontrol>Archivo SRX Predeterminado</uicontrol> o utilice el botón <uicontrol>Examinar...</uicontrol> para seleccionar un archivo SRX del sistema de archivos.</li>
         </ol> </li>
+      <li>Utilice el cuadro de texto <uicontrol>Máximo de hilos</uicontrol> para ingresar el número máximo de hilos a utilizar al generar o importar archivos XLIFF. El valor predeterminado es el número de procesadores disponibles en el equipo.</li>
       <li>Utilice el menú desplegable <uicontrol>Idioma Origen Predeterminado</uicontrol> para seleccionar un idioma de origen predeterminado para sus proyectos.</li>
       <li>Para añadir nuevos idiomas al conjunto predeterminado: <ol>
-          <li>Haga clic en el botón <uicontrol>Añadir Idioma Destino</uicontrol> y aparecerá el siguiente cuadro de diálogo: <image href="../images/add_language.png" placement="break" scale="70" align="center">
+          <li>Haga clic en el botón <uicontrol>Añadir Idioma Destino</uicontrol> y aparecerá el siguiente cuadro de diálogo: <image href="../images/add_language.png" placement="break" scale="65" align="center">
               <alt>Cuadro de diálogo <uicontrol>Añadir Idioma Destino</uicontrol></alt>
             </image> </li>
           <li>Seleccione un idioma de la lista desplegable <uicontrol>Idioma Destino</uicontrol>.</li>

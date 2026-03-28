@@ -14,7 +14,7 @@
           <uicontrol>Projects</uicontrol> view toolbar.</li>
     </ol>
     <p>The <uicontrol>Project Status</uicontrol> dialog appears: <image
-        href="../images/project_status.png" align="center" placement="break" scale="70">
+        href="../images/project_status.png" align="center" placement="break" scale="65">
         <alt><uicontrol>Project Status</uicontrol> dialog <uicontrol>Status</uicontrol> view</alt>
       </image>
     </p>
@@ -31,7 +31,7 @@
       and clicking the <uicontrol>Mark Selection as Translated</uicontrol> button.</p>
     <p>Click the <uicontrol>Project History</uicontrol> tab to display a list of events associated
       with the project.</p>
-    <image placement="break" align="center" href="../images/project_history.png" scale="70">
+    <image placement="break" align="center" href="../images/project_history.png" scale="65">
       <alt><uicontrol>Project Status</uicontrol> dialog, <uicontrol>History</uicontrol> view</alt>
     </image>
     <p>Select the check box of an <uicontrol>XLIFF Created</uicontrol> event to discard one or more

@@ -25,7 +25,7 @@
                         <uicontrol>Projects</uicontrol> view toolbar.</cmd>
                 <stepresult>The <uicontrol>Generate XLIFF</uicontrol> dialog appears: <image
                         placement="break" href="../images/generate_xliff.png" id="image_ugz_ys1_5s"
-                        align="center" scale="70">
+                        align="center" scale="65">
                         <alt><uicontrol>Generate XLIFF</uicontrol> dialog</alt>
                     </image>
                 </stepresult>
@@ -97,7 +97,7 @@
             <step>
                 <cmd>Click the <uicontrol>Generate XLIFF</uicontrol> button.</cmd>
                 <stepresult>The <uicontrol>Process Log</uicontrol> dialog appears: <image
-                        placement="break" href="../images/process_log.png" align="center" scale="70">
+                        placement="break" href="../images/process_log.png" align="center" scale="65">
                         <alt><uicontrol>Process Log</uicontrol> dialog</alt>
                     </image> Click the <uicontrol>Cancel</uicontrol> button to interrupt XLIFF
                     generation if needed.</stepresult>

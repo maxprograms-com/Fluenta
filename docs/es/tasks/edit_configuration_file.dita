@@ -9,7 +9,7 @@
       </step>
       <step>
         <cmd>Haga clic en el botón <uicontrol>Modificar Archivo de Configuración</uicontrol>.</cmd>
-        <stepresult>El siguiente diálogo aparece: <image href="../images/dita_config.png" placement="break" scale="70" align="center"/> </stepresult>
+        <stepresult>El siguiente diálogo aparece: <image href="../images/dita_config.png" placement="break" scalefit="yes" align="center"/> </stepresult>
       </step>
       <step>
         <cmd>Utilice los botones del cuadro de diálogo para actualizar el archivo de configuración.</cmd>

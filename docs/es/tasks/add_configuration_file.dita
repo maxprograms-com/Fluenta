@@ -6,7 +6,7 @@
     <steps>
       <step>
         <cmd>En la pestaña <uicontrol>Opciones XML</uicontrol> del cuadro de diálogo <uicontrol>Configuración</uicontrol>, haga cic en el botón <uicontrol>Añadir Archivo</uicontrol>.</cmd>
-        <stepresult>El siguiente diálogo aparece:<image href="../images/root_element.png" placement="break" scale="70" align="center" id="image_tqm_wld_5s">
+        <stepresult>El siguiente diálogo aparece:<image href="../images/root_element.png" placement="break" scale="65" align="center" id="image_tqm_wld_5s">
             <alt>Cuadro de diálogo <uicontrol>Añadir Archivo de Configuración</uicontrol></alt>
           </image> </stepresult>
       </step>
@@ -15,13 +15,13 @@
       </step>
       <step>
         <cmd>Haga clic en el botón <uicontrol>Añadir Archivo de Configuración</uicontrol>.</cmd>
-        <stepresult>El siguiente diálogo aparece:<image href="../images/grammar_configuration.png" placement="break" scale="70" align="center" id="image_yj4_pmd_5s">
+        <stepresult>El siguiente diálogo aparece:<image href="../images/grammar_configuration.png" placement="break" scalefit="yes" align="center" id="image_yj4_pmd_5s">
             <alt>Cuadro de diálogo de configuración gramatical</alt>
           </image> </stepresult>
       </step>
       <step>
         <cmd>Haga clic en el botón <uicontrol>Añadir Elemento</uicontrol> para añadir la configuración de un elemento.</cmd>
-        <stepresult>El cuadro de diálogo <uicontrol>Configuración de Elemento</uicontrol> aparece: <image href="../images/element_configuration.png" placement="break" scale="70" align="center">
+        <stepresult>El cuadro de diálogo <uicontrol>Configuración de Elemento</uicontrol> aparece: <image href="../images/element_configuration.png" placement="break" scale="65" align="center">
             <alt>Cuadro de diálogo <uicontrol>Configuración de Elemento</uicontrol></alt>
           </image> </stepresult>
       </step>

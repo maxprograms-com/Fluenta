@@ -26,7 +26,7 @@
                         XLIFF</uicontrol> button in the <uicontrol>Projects</uicontrol> view
                     toolbar.</cmd>
                 <stepresult>The <uicontrol>Import XLIFF</uicontrol> dialog appears: <image
-                        href="../images/import_xliff.png" scale="70" align="center"
+                        href="../images/import_xliff.png" scale="65" align="center"
                         placement="break">
                         <alt><uicontrol>Import XLIFF</uicontrol> dialog</alt>
                     </image>
@@ -63,7 +63,7 @@
             <step>
                 <cmd>Click the <uicontrol>Import XLIFF</uicontrol> button.</cmd>
                 <stepresult>The <uicontrol>Process Log</uicontrol> dialog appears: <image
-                        placement="break" href="../images/process_log.png" align="center" scale="70">
+                        placement="break" href="../images/process_log.png" align="center" scale="65">
                         <alt><uicontrol>Process Log</uicontrol> dialog</alt>
                 </image> Click the <uicontrol>Cancel</uicontrol> button to interrupt XLIFF
                     import if needed.</stepresult>

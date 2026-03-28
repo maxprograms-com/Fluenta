@@ -14,7 +14,7 @@
           </menucascade> o haga clic en el botón <uicontrol><image height="14" href="../images/add.svg" placement="inline">
               <alt>Añadir Memoria</alt>
             </image>Añadir Memoria</uicontrol> en la barra de herramientas de la vista <uicontrol>Memorias</uicontrol>.</cmd>
-        <stepresult>El Cuadro de diálogo <uicontrol>Añadir Memoria</uicontrol> aparece: <image href="../images/add_memory.png" placement="break" scale="70" align="center" id="image_rwb_ptc_5s">
+        <stepresult>El Cuadro de diálogo <uicontrol>Añadir Memoria</uicontrol> aparece: <image href="../images/add_memory.png" placement="break" scale="65" align="center" id="image_rwb_ptc_5s">
             <alt>Cuadro de diálogo <uicontrol>Añadir Memoria</uicontrol></alt>
           </image> </stepresult>
       </step>

@@ -17,7 +17,7 @@
                     toolbar.</cmd>
                 <stepresult>The <uicontrol>Add Project</uicontrol> dialog appears: <image
                         placement="break" href="../images/create_project.png" align="center"
-                        scale="70">
+                        scale="65">
                         <alt><uicontrol>Add Project</uicontrol> dialog</alt>
                     </image>
                 </stepresult>
@@ -45,7 +45,7 @@
                         <cmd>Click <uicontrol>Add Target Language</uicontrol> button.</cmd>
                         <stepresult>The <uicontrol>Add Target Language</uicontrol> dialog appears:
                                 <image placement="break" href="../images/add_language.png"
-                                id="image_nwd_r2c_5s" align="center" scale="70">
+                                id="image_nwd_r2c_5s" align="center" scale="65">
                                 <alt><uicontrol>Add Target Language</uicontrol> dialog</alt>
                             </image>
                         </stepresult>
@@ -75,7 +75,7 @@
                     <substep>
                         <cmd>Click on the <uicontrol>Project Memories</uicontrol> button.</cmd>
                         <stepresult>The <uicontrol>Project Memories</uicontrol> dialog appears:
-                                <image href="../images/create_project_memories.png" scale="70"
+                                <image href="../images/create_project_memories.png" scale="65"
                                 placement="break" align="center">
                                 <alt><uicontrol>Project Memories</uicontrol> dialog</alt>
                             </image>

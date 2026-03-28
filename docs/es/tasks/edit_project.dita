@@ -17,7 +17,7 @@
           </menucascade> o haga clic en el botón <uicontrol><image height="14" href="../images/edit.svg" placement="inline">
               <alt>Editar Proyecto</alt>
             </image>Editar Proyecto</uicontrol> de la barra de herramientas de la vista <uicontrol>Proyectos</uicontrol>.</cmd>
-        <stepresult>El Cuadro de diálogo <uicontrol>Editar Proyecto</uicontrol> aparece: <image href="../images/edit_project.png" placement="break" scale="70" align="center">
+        <stepresult>El Cuadro de diálogo <uicontrol>Editar Proyecto</uicontrol> aparece: <image href="../images/edit_project.png" placement="break" scale="65" align="center">
             <alt>Cuadro de diálogo <uicontrol>Editar Proyecto</uicontrol></alt>
           </image> </stepresult>
       </step>

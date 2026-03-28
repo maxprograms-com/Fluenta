@@ -9,7 +9,7 @@
                 <cmd>When you open Fluenta from subscription installers for the first time, or when
                     the subscription key is not registered, the <uicontrol>Register
                         Subscription</uicontrol> dialog is displayed: <image
-                        href="../images/register_new_subscription.png" scale="70" placement="break"
+                        href="../images/register_new_subscription.png" scale="65" placement="break"
                         align="center">
                         <alt>Register Subscription Dialog</alt>
                     </image>
@@ -25,7 +25,7 @@
                 <cmd>If you don't have a subscription key and wish to test the program during 30
                     days, click the <uicontrol>Request Evaluation Key</uicontrol> button.</cmd>
                 <stepresult> The <uicontrol>Request Evaluation Key</uicontrol> dialog appears:
-                        <image href="../images/request_evaluation.png" scale="70" placement="break"
+                        <image href="../images/request_evaluation.png" scale="65" placement="break"
                         align="center">
                         <alt>Request Evaluation Key Dialog</alt>
                     </image>
@@ -36,7 +36,7 @@
                         Key</uicontrol> button.</cmd>
                 <stepresult>On success, an email with the requested evaluation key will be sent to
                     the indicated address and the following dialog will be displayed: <image
-                        href="../images/request_received.png" scale="70" placement="break"
+                        href="../images/request_received.png" scale="65" placement="break"
                         align="center">
                         <alt>Request Received Dialog</alt>
                     </image>Check your email and register the Evaluation Key using the instructions

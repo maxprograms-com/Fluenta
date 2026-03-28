@@ -11,8 +11,7 @@
     <ul>
       <li>Use the <uicontrol>Application Language</uicontrol> drop-down to select the language to
         use in the Graphical User Interface (GUI).</li>
-      <li>Use the <uicontrol>Theme</uicontrol> drop-down to control the application's default
-        appearance.<ul>
+      <li>Use the <uicontrol>Theme</uicontrol> drop-down to control the application's default appearance.<ul>
           <li>Select <uicontrol>System Default</uicontrol> to let your Operating System control the
             default text/background color combination (this option is not supported in some Linux
             distributions).</li>
@@ -35,11 +34,14 @@
             system.</li>
         </ol>
       </li>
+      <li>Use the <uicontrol>Max Threads</uicontrol> text box to enter the maximum number of threads
+        to use when generating or importing XLIFF files. The default value is the number of
+        processors available in the computer.</li>
       <li>Use the <uicontrol>Default Source Language</uicontrol> drop-down to select a default
         source language for your projects.</li>
       <li>To add new target languages to the default set: <ol>
           <li>click the <uicontrol>Add Target Language</uicontrol> button and the following dialog
-            will appear: <image placement="break" href="../images/add_language.png" scale="70"
+            will appear: <image placement="break" href="../images/add_language.png" scale="65"
               align="center">
               <alt><uicontrol>Add Target Language</uicontrol> dialog</alt>
             </image>
@@ -49,10 +51,8 @@
         </ol>
       </li>
       <li>To remove unnecessary languages from the default set, click the corresponding
-        <uicontrol>Remove Language</uicontrol> buttons (<image
-          href="../images/remove.svg" placement="inline" height="16"/>) on the
-        leftmost column.
-      </li>
+          <uicontrol>Remove Language</uicontrol> buttons (<image href="../images/remove.svg"
+          placement="inline" height="16"/>) on the leftmost column. </li>
 
     </ul>
     <p>Click the <uicontrol>Save Settings</uicontrol> button after making any change to the default

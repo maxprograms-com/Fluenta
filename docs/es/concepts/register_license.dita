@@ -5,7 +5,7 @@
   <shortdesc/>
   <conbody>
     <p>Cuando inicie el programa después de que haya finalizado el periodo de prueba o haya caducado una clave de suscripción, aparecerá el cuadro de diálogo <uicontrol>Registrar Suscripción</uicontrol>:</p>
-    <image href="../images/register_subscription.png" placement="break" scale="70" align="center">
+    <image href="../images/register_subscription.png" placement="break" scale="65" align="center">
       <alt>Cuadro de diálogo <uicontrol>Registrar Suscripción</uicontrol></alt>
     </image>
     <p>Si no dispone de una clave de suscripción, haga clic en el botón <uicontrol>Comprar Suscripción</uicontrol> para abrir la <xref href="https://www.maxprograms.com/store/buy.html" scope="external" format="html">Tienda en línea de Maxprograms</xref> en su navegador predeterminado y adquirir una clave.</p>

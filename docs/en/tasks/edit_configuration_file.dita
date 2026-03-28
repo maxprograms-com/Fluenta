@@ -12,7 +12,7 @@
             <step>
                 <cmd>Click the <uicontrol>Edit Configuration File</uicontrol> button.</cmd>
                 <stepresult>The following dialog appears: <image href="../images/dita_config.png"
-                        placement="break" scale="70" align="center"/>
+                        placement="break" scalefit="yes" align="center"/>
                 </stepresult>
             </step>
             <step>

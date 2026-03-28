@@ -14,7 +14,7 @@
           </menucascade> o haga clic en el botón <uicontrol><image height="14" href="../images/add.svg" placement="inline">
               <alt>Crear Proyecto</alt>
             </image>Añadir Proyecto</uicontrol> de la barra de herramientas de la vista <uicontrol>Proyectos</uicontrol>.</cmd>
-        <stepresult>El Cuadro de diálogo <uicontrol>Añadir Proyecto</uicontrol> aparece: <image href="../images/create_project.png" placement="break" scale="70" align="center">
+        <stepresult>El Cuadro de diálogo <uicontrol>Añadir Proyecto</uicontrol> aparece: <image href="../images/create_project.png" placement="break" scale="65" align="center">
             <alt>Cuadro de diálogo <uicontrol>Añadir Proyecto</uicontrol></alt>
           </image> </stepresult>
       </step>
@@ -35,7 +35,7 @@
         <substeps id="substeps_wtk_vdc_5s">
           <substep>
             <cmd>Haga clic en el botón <uicontrol>Añadir Idioma Destino</uicontrol>.</cmd>
-            <stepresult>El Cuadro de diálogo <uicontrol>Añadir Idioma Destino</uicontrol> aparece: <image href="../images/add_language.png" placement="break" scale="70" align="center" id="image_nwd_r2c_5s">
+            <stepresult>El Cuadro de diálogo <uicontrol>Añadir Idioma Destino</uicontrol> aparece: <image href="../images/add_language.png" placement="break" scale="65" align="center" id="image_nwd_r2c_5s">
                 <alt>Cuadro de diálogo <uicontrol>Añadir Idioma Destino</uicontrol></alt>
               </image> </stepresult>
           </substep>
@@ -57,7 +57,7 @@
         <substeps id="substeps_bzj_4fc_5s">
           <substep>
             <cmd>Haga clic en el botón <uicontrol>Memorias del Proyecto</uicontrol>.</cmd>
-            <stepresult>El Cuadro de diálogo <uicontrol>Memorias del Proyecto</uicontrol> aparece: <image href="../images/create_project_memories.png" placement="break" scale="70" align="center">
+            <stepresult>El Cuadro de diálogo <uicontrol>Memorias del Proyecto</uicontrol> aparece: <image href="../images/create_project_memories.png" placement="break" scale="65" align="center">
                 <alt>Cuadro de diálogo <uicontrol>Memorias del Proyecto</uicontrol></alt>
               </image> </stepresult>
           </substep>

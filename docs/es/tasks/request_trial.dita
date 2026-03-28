@@ -6,7 +6,7 @@
   <taskbody>
     <steps>
       <step>
-        <cmd>Cuando se abre Fluenta desde instaladores de suscripción por primera vez, o cuando la clave de suscripción no esté registrada, aparece el cuadro de diálogo <uicontrol>Registrar Suscripción</uicontrol>: <image href="../images/register_new_subscription.png" placement="break" scale="70" align="center">
+        <cmd>Cuando se abre Fluenta desde instaladores de suscripción por primera vez, o cuando la clave de suscripción no esté registrada, aparece el cuadro de diálogo <uicontrol>Registrar Suscripción</uicontrol>: <image href="../images/register_new_subscription.png" placement="break" scale="65" align="center">
             <alt>Cuadro de diálogo Registrar Suscripción</alt>
           </image> </cmd>
       </step>
@@ -16,13 +16,13 @@
       </step>
       <step>
         <cmd>Si no dispone de una clave de suscripción y desea probar el programa durante 30 días, haga clic en el botón <uicontrol>Solicitar Clave de Evaluación</uicontrol>.</cmd>
-        <stepresult> El cuadro de diálogo <uicontrol>Solicitar Clave de Evaluación</uicontrol> aparece: <image href="../images/request_evaluation.png" placement="break" scale="70" align="center">
+        <stepresult> El cuadro de diálogo <uicontrol>Solicitar Clave de Evaluación</uicontrol> aparece: <image href="../images/request_evaluation.png" placement="break" scale="65" align="center">
             <alt>Cuadro de diálogo Solicitar Clave de Evaluación</alt>
           </image> </stepresult>
       </step>
       <step>
         <cmd>Introduzca los datos solicitados y haga clic en el botón <uicontrol>Solicitar Clave de Evaluación</uicontrol>.</cmd>
-        <stepresult>Si tiene éxito, se enviará un correo electrónico con la clave de evaluación solicitada a la dirección indicada y se mostrará el siguiente cuadro de diálogo: <image href="../images/request_received.png" placement="break" scale="70" align="center">
+        <stepresult>Si tiene éxito, se enviará un correo electrónico con la clave de evaluación solicitada a la dirección indicada y se mostrará el siguiente cuadro de diálogo: <image href="../images/request_received.png" placement="break" scale="65" align="center">
             <alt>Cuadro de diálogo Solicitud Recibida</alt>
           </image>Compruebe su correo electrónico y registre la clave de evaluación siguiendo las instrucciones indicadas anteriormente. </stepresult>
       </step>

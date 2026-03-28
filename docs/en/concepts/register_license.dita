@@ -6,7 +6,7 @@
     <conbody>
         <p>When you start the program after the trial period has ended or a subscription key has
             expired, the <uicontrol>Register Subscription</uicontrol> dialog appears:</p>
-        <image href="../images/register_subscription.png" placement="break" scale="70"
+        <image href="../images/register_subscription.png" placement="break" scale="65"
             align="center">
             <alt><uicontrol>Register Susbcription</uicontrol> dialog</alt>
         </image>

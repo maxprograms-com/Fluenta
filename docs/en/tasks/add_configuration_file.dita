@@ -10,21 +10,21 @@
                         Configuration File</uicontrol> button.</cmd>
                 <stepresult>The following dialog appears:<image placement="break"
                         href="../images/root_element.png" id="image_tqm_wld_5s" align="center"
-                        scale="70">
+                        scale="65">
                         <alt><uicontrol>Add Configuration File</uicontrol> dialog</alt>
                     </image>
                 </stepresult>
             </step>
             <step>
                 <cmd>Type the name of the root element of your XML files in the <uicontrol>Root
-                        Element</uicontrol> text box. The name of the root element is used to name
-                    the configuration file.</cmd>
+                        Element Name</uicontrol> text box. The name of the root element is used to
+                    name the configuration file.</cmd>
             </step>
             <step>
                 <cmd>Click the <uicontrol>Add Configuration File</uicontrol> button.</cmd>
                 <stepresult>The following dialog appears:<image placement="break"
                         href="../images/grammar_configuration.png" id="image_yj4_pmd_5s"
-                        align="center" scale="70">
+                        align="center" scalefit="yes">
                         <alt>Grammar Configuration dialog</alt>
                     </image>
                 </stepresult>
@@ -33,7 +33,7 @@
                 <cmd>Click the <uicontrol>Add Element</uicontrol> button to add the configuration of
                     an element.</cmd>
                 <stepresult>The <uicontrol>Element Configuration</uicontrol> dialog appears: <image
-                        href="../images/element_configuration.png" placement="break" scale="70"
+                        href="../images/element_configuration.png" placement="break" scale="65"
                         align="center">
                         <alt><uicontrol>Element Configuration</uicontrol> dialog</alt>
                     </image>

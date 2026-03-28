@@ -17,7 +17,7 @@
           </menucascade> o haga clic en el botón <uicontrol><image height="14" href="../images/import.svg" placement="inline">
               <alt>Importar XLIFF</alt>
             </image>Importar XLIFF</uicontrol> de la barra de herramientas de la vista <uicontrol>Proyectos</uicontrol>.</cmd>
-        <stepresult>El Cuadro de diálogo <uicontrol>Importar XLIFF</uicontrol> aparece: <image href="../images/import_xliff.png" placement="break" scale="70" align="center">
+        <stepresult>El Cuadro de diálogo <uicontrol>Importar XLIFF</uicontrol> aparece: <image href="../images/import_xliff.png" placement="break" scale="65" align="center">
             <alt>Cuadro de diálogo <uicontrol>Importar XLIFF</uicontrol></alt>
           </image> </stepresult>
       </step>
@@ -38,7 +38,7 @@
       </step>
       <step>
         <cmd>Haga clic en el botón <uicontrol>Importar XLIFF</uicontrol>.</cmd>
-        <stepresult>El Cuadro de diálogo <uicontrol>Historial</uicontrol> aparece: <image href="../images/process_log.png" placement="break" scale="70" align="center">
+        <stepresult>El Cuadro de diálogo <uicontrol>Historial</uicontrol> aparece: <image href="../images/process_log.png" placement="break" scale="65" align="center">
             <alt>Cuadro de diálogo <uicontrol>Historial</uicontrol></alt>
           </image> Haga clic en el botón <uicontrol>Cancelar</uicontrol> para interrumpir la importación de XLIFF si es necesario.</stepresult>
       </step>
