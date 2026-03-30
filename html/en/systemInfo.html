@@ -6,7 +6,7 @@
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body class="dialogBody" onload="new SystemInformation();">
+<body class="dialogBody">
     <table class="textTable">
         </tableclass>
         <tr>
@@ -38,7 +38,11 @@
             <td id="electron"></td>
         </tr>
     </table>
-    <script src="../../js/systemInformation.js"></script>
+    
+    <script>
+        const { SystemInformation } = require('../../js/systemInformation.js');
+        new SystemInformation();
+    </script>
 </body>
 
 </html>

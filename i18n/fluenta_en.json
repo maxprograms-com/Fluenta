@@ -47,7 +47,11 @@
         "languageChanged": "Application language settings will be applied on next start",
         "restart": "Restart Now",
         "dismiss": "Dismiss",
-        "javaProcessRunning": "A process is running. Cancel it before closing Fluenta."
+        "javaProcessRunning": "A process is running. Cancel it before closing Fluenta.",
+        "projectNotFound": "Project not found",
+        "languageNotFound": "Language '{0}' not found",
+        "windowNotFound": "Window not found",
+        "memoryNotFound": "Memory not found"
     },
     "menu": {
         "addProject": "Add Project",

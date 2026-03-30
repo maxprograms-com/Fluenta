@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <title>Generar XLIFF</title>
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body class="dialogBody" onload="new GenerateXliffDialog();">
+<body class="dialogBody">
     <table>
         <tr>
             <td style="padding-left: 4px; padding-right: 4px;">Proyecto</td>
@@ -141,7 +141,11 @@
         <div class="filler">&nbsp;</div>
         <button id="generateXliff">Generar XLIFF</button>
     </div>
-    <script src="../../js/generateXliffDialog.js"></script>
+    
+    <script>
+        const { GenerateXliffDialog } = require('../../js/generateXliffDialog.js');
+        new GenerateXliffDialog();
+    </script>
 </body>
 
 </html>

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -13,14 +13,20 @@
 import { ChildProcessWithoutNullStreams, SpawnSyncReturns, spawn, spawnSync } from "child_process";
 import { BrowserWindow, Display, IncomingMessage, IpcMainEvent, Menu, MenuItem, MessageBoxReturnValue, Rectangle, Size, app, clipboard, dialog, ipcMain, nativeTheme, net, screen, session, shell } from "electron";
 import { appendFileSync, cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from "fs";
+import { join } from 'path';
 import { Language, LanguageUtils } from "typesbcp47";
 import { ContentHandler, DOMBuilder, Indenter, SAXParser, TextNode, XMLAttribute, XMLDocument, XMLDocumentType, XMLElement, XMLNode, XMLWriter } from "typesxml";
-import { I18n } from "./i18n";
-import { MessageTypes } from "./messageTypes";
+import { ElementConfiguration } from "./element.js";
+import { I18n } from "./i18n.js";
+import { LanguageInterface } from "./languages.js";
+import { Memory } from "./memory.js";
+import { MessageTypes } from "./messageTypes.js";
+import { Preferences } from "./preferences.js";
+import { Project } from "./project.js";
+import { cpus } from "os";
 
 export class Fluenta {
 
-    static path = require('path');
     static currentDefaults: Rectangle;
     static appFolder: string = 'fluenta-5';
     static preferences: Preferences = {
@@ -28,12 +34,13 @@ export class Fluenta {
         defaultTheme: 'system',
         defaultSrcLang: 'en-US',
         defaultTgtLang: ['fr', 'de', 'it', 'ja-JP', 'es'],
-        projectsFolder: Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects'),
-        memoriesFolder: Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'memories'),
-        srxFile: Fluenta.path.join(app.getAppPath(), 'srx', 'default.srx'),
-        translateComments: false
+        projectsFolder: join(app.getPath('appData'), Fluenta.appFolder, 'projects'),
+        memoriesFolder: join(app.getPath('appData'), Fluenta.appFolder, 'memories'),
+        srxFile: join(app.getAppPath(), 'srx', 'default.srx'),
+        translateComments: false,
+        maxThreads: cpus().length
     };
-    static iconPath: string = Fluenta.path.join(app.getAppPath(), 'icons', 'icon.png');
+    static iconPath: string = join(app.getAppPath(), 'img', 'icon.png');
 
     private static i18n: I18n;
     private static currentTheme: string;
@@ -63,7 +70,7 @@ export class Fluenta {
     static downloadLink: string;
     static droppedFile: string = '';
 
-    static javaProcess: ChildProcessWithoutNullStreams;
+    static javaProcess: ChildProcessWithoutNullStreams | undefined = undefined;
     static cancelledProcess: boolean = false;
     static javaErrors: boolean = false;
 
@@ -80,12 +87,15 @@ export class Fluenta {
             }
             Fluenta.mainWindow.focus();
         }
+        if (process.platform === 'linux') {
+            app.commandLine.appendSwitch('gtk-version', '3');
+        }
         Fluenta.loadPreferences();
         Fluenta.checkFolders();
-        Fluenta.i18n = new I18n(Fluenta.path.join(app.getAppPath(), 'i18n', 'fluenta_' + Fluenta.preferences.lang + '.json'));
+        Fluenta.i18n = new I18n(join(app.getAppPath(), 'i18n', 'fluenta_' + Fluenta.preferences.lang + '.json'));
         app.on('ready', () => {
             Fluenta.createWindow();
-            let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'index.html');
+            let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'index.html');
             let fileUrl: URL = new URL('file://' + filePath);
             Fluenta.mainWindow.loadURL(fileUrl.href);
             Fluenta.mainWindow.once('ready-to-show', () => {
@@ -94,7 +104,7 @@ export class Fluenta {
             });
         });
 
-        app.on('before-quit', (event: Event) => {
+        app.on('before-quit', (event) => {
             if (Fluenta.javaProcess) {
                 event.preventDefault();
                 Fluenta.showMessage(MessageTypes.error, 'fluenta', 'javaProcessRunning');
@@ -281,25 +291,25 @@ export class Fluenta {
             }
         });
         ipcMain.on('select-xliff-folder', (event: IpcMainEvent) => {
-            let folder: string[] = dialog.showOpenDialogSync(Fluenta.generateXliffWindow, { properties: ['openDirectory', 'createDirectory'] });
+            let folder: string[] | undefined = dialog.showOpenDialogSync(Fluenta.generateXliffWindow, { properties: ['openDirectory', 'createDirectory'] });
             if (folder) {
                 event.sender.send('set-xliff-folder', folder[0]);
             }
         });
         ipcMain.on('select-ditaval', (event: IpcMainEvent) => {
-            let ditaval: string[] = dialog.showOpenDialogSync(Fluenta.generateXliffWindow, { properties: ['openFile'], filters: [{ name: 'DITAVAL Files', extensions: ['ditaval'] }, { name: 'Any File', extensions: ['*'] }] });
+            let ditaval: string[] | undefined = dialog.showOpenDialogSync(Fluenta.generateXliffWindow, { properties: ['openFile'], filters: [{ name: 'DITAVAL Files', extensions: ['ditaval'] }, { name: 'Any File', extensions: ['*'] }] });
             if (ditaval) {
                 event.sender.send('set-ditaval', ditaval[0]);
             }
         });
         ipcMain.on('select-xliff-file', (event: IpcMainEvent) => {
-            let file: string[] = dialog.showOpenDialogSync(Fluenta.importXliffWindow, { properties: ['openFile'], filters: [{ name: 'XLIFF Files', extensions: ['xlf', 'xliff'] }, { name: 'Any File', extensions: ['*'] }] });
+            let file: string[] | undefined = dialog.showOpenDialogSync(Fluenta.importXliffWindow, { properties: ['openFile'], filters: [{ name: 'XLIFF Files', extensions: ['xlf', 'xliff'] }, { name: 'Any File', extensions: ['*'] }] });
             if (file) {
                 event.sender.send('set-xliff-file', file[0]);
             }
         });
         ipcMain.on('select-output-folder', (event: IpcMainEvent) => {
-            let folder: string[] = dialog.showOpenDialogSync(Fluenta.importXliffWindow, { properties: ['openDirectory', 'createDirectory'] });
+            let folder: string[] | undefined = dialog.showOpenDialogSync(Fluenta.importXliffWindow, { properties: ['openDirectory', 'createDirectory'] });
             if (folder) {
                 event.sender.send('set-output-folder', folder[0]);
             }
@@ -314,7 +324,10 @@ export class Fluenta {
             Fluenta.cancelProcess();
         });
         ipcMain.on('get-project-languages', (event: IpcMainEvent, projectId: number) => {
-            event.sender.send('set-project-languages', Fluenta.getProjectLanguages(projectId));
+            let projectLanguages = Fluenta.getProjectLanguages(projectId);
+            if (projectLanguages) {
+                event.sender.send('set-project-languages', projectLanguages);
+            }
         });
         ipcMain.on('get-memories', (event: IpcMainEvent, from: string) => {
             Fluenta.getMemories(from);
@@ -381,9 +394,9 @@ export class Fluenta {
             Fluenta.showImportXLIFF(arg.projectId, arg.description);
         });
         nativeTheme.on('updated', () => {
-            let dark = Fluenta.path.join(app.getAppPath(), 'css', 'dark.css');
-            let light = Fluenta.path.join(app.getAppPath(), 'css', 'light.css');
-            let highcontrast = Fluenta.path.join(app.getAppPath(), 'css', 'highcontrast.css');
+            let dark = join(app.getAppPath(), 'css', 'dark.css');
+            let light = join(app.getAppPath(), 'css', 'light.css');
+            let highcontrast = join(app.getAppPath(), 'css', 'highcontrast.css');
             if (Fluenta.preferences.defaultTheme === 'system') {
                 if (nativeTheme.shouldUseDarkColors) {
                     Fluenta.currentTheme = dark;
@@ -398,6 +411,7 @@ export class Fluenta {
                     window.webContents.send('set-theme', Fluenta.currentTheme);
                 }
             }
+            Fluenta.createMenu();
         });
 
         setTimeout(() => {
@@ -405,7 +419,7 @@ export class Fluenta {
         }, 2000);
     }
 
-    static cancelXliff(project: Project, events: string[]) {
+    static cancelXliff(project: Project, events: string[]): void {
         let modifiedLanguages: string[] = [];
         for (let i: number = 0; i < events.length; i++) {
             let event: string = events[i];
@@ -422,33 +436,37 @@ export class Fluenta {
         let languageStatus: Map<string, string> = new Map<string, string>();
         let statusMap: Map<string, Map<number, string>> = new Map();
         for (let event of project.history) {
-            let language = event.language;
-            let build = event.build;
-            let type = event.type;
-            let languageMap: Map<number, string> = statusMap.get(language);
+            let language: string = event.language;
+            let build: number = event.build;
+            let type: string = event.type;
+            let languageMap: Map<number, string> | undefined = statusMap.get(language);
             if (!languageMap) {
-                statusMap.set(language, new Map<number, string>());
+                languageMap = new Map<number, string>();
+                statusMap.set(language, languageMap);
             }
             languageMap = statusMap.get(language);
             if (type === '0') {
-                languageMap.set(build, '1'); // in progress
+                languageMap?.set(build, '1'); // in progress
             }
             if (type === '1') {
-                languageMap.set(build, '2'); // completed
+                languageMap?.set(build, '2'); // completed
             }
             if (type === '2') {
-                languageMap.delete(build);
+                languageMap?.delete(build);
             }
         }
         for (let tgtLang of project.tgtLanguages) {
-            let languageMap: Map<number, string> = statusMap.get(tgtLang);
-            if (languageMap.size === 0) {
+            let languageMap: Map<number, string> | undefined = statusMap.get(tgtLang);
+            if (!languageMap || languageMap.size === 0) {
                 languageStatus.set(tgtLang, '0'); // new
             } else {
                 // get the status of the last build
                 let keys: number[] = Array.from(languageMap.keys());
                 keys = keys.sort((a, b) => a - b);
-                languageStatus.set(tgtLang, languageMap.get(keys[keys.length - 1]));
+                let lastStatus: string | undefined = languageMap.get(keys[keys.length - 1]);
+                if (lastStatus) {
+                    languageStatus.set(tgtLang, lastStatus);
+                }
             }
         }
         let keys: string[] = Array.from(languageStatus.keys());
@@ -463,8 +481,10 @@ export class Fluenta {
         Fluenta.saveProject(project);
         let langMap: Map<string, string> = new Map<string, string>();
         for (let lang of project.tgtLanguages) {
-            let language: Language = LanguageUtils.getLanguage(lang, Fluenta.preferences.lang);
-            langMap.set(language.code, language.description);
+            let language: Language | undefined = LanguageUtils.getLanguage(lang, Fluenta.preferences.lang);
+            if (language) {
+                langMap.set(language.code, language.description);
+            }
         }
         Fluenta.statusWindow.webContents.send('set-project', { project: project, languages: langMap, statusMap: Fluenta.getStatusMap(), eventsMap: Fluenta.eventsMap });
     }
@@ -488,46 +508,51 @@ export class Fluenta {
         return str;
     }
 
-    static markTranslated(project: Project, languages: string[]) {
-        let prj: Project = Fluenta.getProject(project.id);
+    static markTranslated(project: Project, languages: string[]): void {
+        let prj: Project | undefined = Fluenta.getProject(project.id);
+        if (!prj) {
+            Fluenta.showMessage(MessageTypes.error, 'fluenta', 'projectNotFound');
+            return;
+        }
         for (let i: number = 0; i < languages.length; i++) {
             let language: string = languages[i];
             prj.languageStatus[language] = '2';
         }
         Fluenta.saveProject(prj);
         Fluenta.getProjects();
-        project = Fluenta.getProject(project.id);
         let langMap: Map<string, string> = new Map<string, string>();
-        for (let lang of project.tgtLanguages) {
-            let language: Language = LanguageUtils.getLanguage(lang, Fluenta.preferences.lang);
-            langMap.set(language.code, language.description);
+        for (let lang of prj.tgtLanguages) {
+            let language: Language | undefined = LanguageUtils.getLanguage(lang, Fluenta.preferences.lang);
+            if (language) {
+                langMap.set(language.code, language.description);
+            }
         }
-        Fluenta.statusWindow.webContents.send('set-project', { project: project, languages: langMap, statusMap: Fluenta.getStatusMap(), eventsMap: Fluenta.eventsMap });
+        Fluenta.statusWindow.webContents.send('set-project', { project: prj, languages: langMap, statusMap: Fluenta.getStatusMap(), eventsMap: Fluenta.eventsMap });
     }
 
-    static checkFolders() {
-        let catalogFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'catalog');
+    static checkFolders(): void {
+        let catalogFolder: string = join(app.getPath('appData'), Fluenta.appFolder, 'catalog');
         if (!existsSync(catalogFolder)) {
             mkdirSync(catalogFolder, { recursive: true });
-            let sourceFolderPath: string = Fluenta.path.join(app.getAppPath(), 'catalog');
+            let sourceFolderPath: string = join(app.getAppPath(), 'catalog');
             cpSync(sourceFolderPath, catalogFolder, { recursive: true });
         }
-        let filtersFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter');
+        let filtersFolder: string = join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter');
         if (!existsSync(filtersFolder)) {
             mkdirSync(filtersFolder, { recursive: true });
-            let sourceFolderPath: string = Fluenta.path.join(app.getAppPath(), 'xmlfilter');
+            let sourceFolderPath: string = join(app.getAppPath(), 'xmlfilter');
             cpSync(sourceFolderPath, filtersFolder, { recursive: true });
         }
-        let srxFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'srx');
+        let srxFolder: string = join(app.getPath('appData'), Fluenta.appFolder, 'srx');
         if (!existsSync(srxFolder)) {
             mkdirSync(srxFolder, { recursive: true });
-            let sourceFolderPath: string = Fluenta.path.join(app.getAppPath(), 'srx');
+            let sourceFolderPath: string = join(app.getAppPath(), 'srx');
             cpSync(sourceFolderPath, srxFolder, { recursive: true });
         }
     }
 
     static browseProjectsFolder(): void {
-        let folder: string[] = dialog.showOpenDialogSync(Fluenta.mainWindow, { properties: ['openDirectory', 'createDirectory'], defaultPath: Fluenta.preferences.projectsFolder });
+        let folder: string[] | undefined = dialog.showOpenDialogSync(Fluenta.mainWindow, { properties: ['openDirectory', 'createDirectory'], defaultPath: Fluenta.preferences.projectsFolder });
         if (folder) {
             Fluenta.preferences.projectsFolder = folder[0];
             Fluenta.savePreferences(Fluenta.preferences, false);
@@ -536,7 +561,7 @@ export class Fluenta {
     }
 
     static browseMemoriesFolder(): void {
-        let folder: string[] = dialog.showOpenDialogSync(Fluenta.mainWindow, { properties: ['openDirectory', 'createDirectory'], defaultPath: Fluenta.preferences.memoriesFolder });
+        let folder: string[] | undefined = dialog.showOpenDialogSync(Fluenta.mainWindow, { properties: ['openDirectory', 'createDirectory'], defaultPath: Fluenta.preferences.memoriesFolder });
         if (folder) {
             Fluenta.preferences.memoriesFolder = folder[0];
             Fluenta.savePreferences(Fluenta.preferences, false);
@@ -545,7 +570,7 @@ export class Fluenta {
     }
 
     static browseSrxFile(): void {
-        let file: string[] = dialog.showOpenDialogSync(Fluenta.mainWindow, {
+        let file: string[] | undefined = dialog.showOpenDialogSync(Fluenta.mainWindow, {
             properties: ['openFile'], filters: [
                 { name: Fluenta.i18n.getString('fluenta', 'srxFiles'), extensions: ['srx'] },
                 { name: Fluenta.i18n.getString('fluenta', 'allFiles'), extensions: ['*'] }
@@ -559,7 +584,7 @@ export class Fluenta {
         }
     }
 
-    static exportTMX(id: number, name: string) {
+    static exportTMX(id: number, name: string): void {
         let tmxFile: string = dialog.showSaveDialogSync(Fluenta.mainWindow, {
             filters: [
                 { name: Fluenta.i18n.getString('fluenta', 'tmxFiles'), extensions: ['tmx'] },
@@ -581,8 +606,8 @@ export class Fluenta {
         }
     }
 
-    static importTMX(memoryId: number) {
-        let tmxFile = dialog.showOpenDialogSync(Fluenta.mainWindow, {
+    static importTMX(memoryId: number): void {
+        let tmxFile: string[] | undefined = dialog.showOpenDialogSync(Fluenta.mainWindow, {
             filters: [
                 { name: Fluenta.i18n.getString('fluenta', 'tmxFiles'), extensions: ['tmx'] },
                 { name: Fluenta.i18n.getString('fluenta', 'allFiles'), extensions: ['*'] }
@@ -602,7 +627,7 @@ export class Fluenta {
         }
     }
 
-    static removeCatalogs(event: Electron.IpcMainEvent, toRemove: string[]) {
+    static removeCatalogs(event: Electron.IpcMainEvent, toRemove: string[]): void {
         let button: number = dialog.showMessageBoxSync(Fluenta.settingsWindow, {
             type: 'question',
             buttons: [Fluenta.i18n.getString('fluenta', 'yes'), Fluenta.i18n.getString('fluenta', 'no')],
@@ -612,28 +637,34 @@ export class Fluenta {
         if (button > 0) {
             return;
         }
-        let catalogFile = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'catalog', 'catalog.xml');
+        let catalogFile = join(app.getPath('appData'), Fluenta.appFolder, 'catalog', 'catalog.xml');
         if (existsSync(catalogFile)) {
             let contentHandler: ContentHandler = new DOMBuilder();
             let xmlParser = new SAXParser();
             xmlParser.setContentHandler(contentHandler);
             xmlParser.parseFile(catalogFile);
-            let catalog: XMLDocument = (contentHandler as DOMBuilder).getDocument();
-            let entries: XMLElement[] = catalog.getRoot().getChildren();
-            let newContent: XMLNode[] = [];
-            for (let entry of entries) {
-                if (entry.getName() === 'nextCatalog') {
-                    if (toRemove.indexOf(entry.getAttribute('catalog').getValue()) === -1) {
-                        newContent.push(entry);
+            let catalog: XMLDocument | undefined = (contentHandler as DOMBuilder).getDocument();
+            if (catalog) {
+                let root: XMLElement | undefined = catalog.getRoot();
+                if (root) {
+                    let entries: XMLElement[] = root.getChildren();
+                    let newContent: XMLNode[] = [];
+                    for (let entry of entries) {
+                        if (entry.getName() === 'nextCatalog') {
+                            let catalogAttribute = entry.getAttribute('catalog');
+                            if (catalogAttribute && toRemove.indexOf(catalogAttribute.getValue()) === -1) {
+                                newContent.push(entry);
+                            }
+                        } else {
+                            newContent.push(entry);
+                        }
                     }
-                } else {
-                    newContent.push(entry);
+                    root.setContent(newContent);
+                    let indenter: Indenter = new Indenter(2);
+                    indenter.indent(root);
+                    writeFileSync(catalogFile, catalog.toString());
                 }
             }
-            catalog.getRoot().setContent(newContent);
-            let indenter: Indenter = new Indenter(2);
-            indenter.indent(catalog.getRoot());
-            writeFileSync(catalogFile, catalog.toString());
             Fluenta.getXmlOptions(event);
         } else {
             let msg: string = Fluenta.i18n.getString('fluenta', 'catalogNotFound');
@@ -641,37 +672,43 @@ export class Fluenta {
         }
     }
 
-    static addCatalog(event: Electron.IpcMainEvent) {
-        let selectedFiles: string[] = dialog.showOpenDialogSync(Fluenta.settingsWindow, {
+    static addCatalog(event: Electron.IpcMainEvent): void {
+        let selectedFiles: string[] | undefined = dialog.showOpenDialogSync(Fluenta.settingsWindow, {
             filters: [
                 { name: Fluenta.i18n.getString('fluenta', 'xmlFiles'), extensions: ['xml'] },
                 { name: Fluenta.i18n.getString('fluenta', 'allFiles'), extensions: ['*'] }
             ]
         });
         if (selectedFiles) {
-            let catalogFile = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'catalog', 'catalog.xml');
+            let catalogFile = join(app.getPath('appData'), Fluenta.appFolder, 'catalog', 'catalog.xml');
             if (existsSync(catalogFile)) {
                 let contentHandler: ContentHandler = new DOMBuilder();
                 let xmlParser = new SAXParser();
                 xmlParser.setContentHandler(contentHandler);
                 xmlParser.parseFile(catalogFile);
-                let catalog: XMLDocument = (contentHandler as DOMBuilder).getDocument();
-                let entries: XMLElement[] = catalog.getRoot().getChildren();
-                let found: boolean = false;
-                for (let entry of entries) {
-                    if (entry.getName() === 'nextCatalog' && entry.getAttribute('catalog').getValue() === selectedFiles[0]) {
-                        found = true;
-                        break;
+                let catalog: XMLDocument | undefined = (contentHandler as DOMBuilder).getDocument();
+                if (catalog) {
+                    let root: XMLElement | undefined = catalog.getRoot();
+                    if (root) {
+                        let entries: XMLElement[] = root.getChildren();
+                        let found: boolean = false;
+                        for (let entry of entries) {
+                            let catalogattribute = entry.getAttribute('catalog');
+                            if (entry.getName() === 'nextCatalog' && catalogattribute && catalogattribute.getValue() === selectedFiles[0]) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            let newCatalog: XMLElement = new XMLElement('nextCatalog');
+                            newCatalog.setAttribute(new XMLAttribute('catalog', selectedFiles[0]));
+                            root.addElement(newCatalog);
+                            let indenter: Indenter = new Indenter(2);
+                            indenter.indent(root);
+                            writeFileSync(catalogFile, catalog.toString());
+                            Fluenta.getXmlOptions(event);
+                        }
                     }
-                }
-                if (!found) {
-                    let newCatalog: XMLElement = new XMLElement('nextCatalog');
-                    newCatalog.setAttribute(new XMLAttribute('catalog', selectedFiles[0]));
-                    catalog.getRoot().addElement(newCatalog);
-                    let indenter: Indenter = new Indenter(2);
-                    indenter.indent(catalog.getRoot());
-                    writeFileSync(catalogFile, catalog.toString());
-                    Fluenta.getXmlOptions(event);
                 }
             } else {
                 let msg: string = Fluenta.i18n.getString('fluenta', 'catalogNotFound');
@@ -680,25 +717,33 @@ export class Fluenta {
         }
     }
 
-    static getXmlOptions(event: Electron.IpcMainEvent) {
+    static getXmlOptions(event: Electron.IpcMainEvent): void {
         let filterFiles: string[] = Fluenta.getFilterFiles();
         let catalogEntries: string[] = Fluenta.getCatalogEntries();
         event.sender.send('set-xml-options', { filterFiles: filterFiles, catalogEntries: catalogEntries });
     }
 
     static getCatalogEntries(): string[] {
-        let catalogFile = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'catalog', 'catalog.xml');
+        let catalogFile = join(app.getPath('appData'), Fluenta.appFolder, 'catalog', 'catalog.xml');
         if (existsSync(catalogFile)) {
             let contentHandler: ContentHandler = new DOMBuilder();
             let xmlParser = new SAXParser();
             xmlParser.setContentHandler(contentHandler);
             xmlParser.parseFile(catalogFile);
-            let catalog: XMLDocument = (contentHandler as DOMBuilder).getDocument();
             let catalogEntries: string[] = [];
-            let entries: XMLElement[] = catalog.getRoot().getChildren();
-            for (let entry of entries) {
-                if (entry.getName() === 'nextCatalog') {
-                    catalogEntries.push(entry.getAttribute('catalog').getValue());
+            let catalog: XMLDocument | undefined = (contentHandler as DOMBuilder).getDocument();
+            if (catalog) {
+                let root: XMLElement | undefined = catalog.getRoot();
+                if (root) {
+                    let entries: XMLElement[] = root.getChildren();
+                    for (let entry of entries) {
+                        if (entry.getName() === 'nextCatalog') {
+                            let catalogattribute = entry.getAttribute('catalog');
+                            if (catalogattribute) {
+                                catalogEntries.push(catalogattribute.getValue());
+                            }
+                        }
+                    }
                 }
             }
             return catalogEntries;
@@ -709,13 +754,13 @@ export class Fluenta {
     }
 
     static getFilterFiles(): string[] {
-        let filtersFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter');
+        let filtersFolder: string = join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter');
         let filesList: string[] = readdirSync(filtersFolder);
         return filesList.filter((file: string) => file.endsWith('.xml'));
     }
 
-    static generateXliff(arg: any) {
-        let paramsFile: string = Fluenta.path.join(app.getPath('temp'), 'xliffParams.json');
+    static generateXliff(arg: any): void {
+        let paramsFile: string = join(app.getPath('temp'), 'xliffParams.json');
         if (existsSync(paramsFile)) {
             unlinkSync(paramsFile);
         }
@@ -728,12 +773,12 @@ export class Fluenta {
         Fluenta.saveXliffSettings(arg);
     }
 
-    static saveXliffSettings(arg: any) {
-        let projectsFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects');
+    static saveXliffSettings(arg: any): void {
+        let projectsFolder: string = join(app.getPath('appData'), Fluenta.appFolder, 'projects');
         if (!existsSync(projectsFolder)) {
             mkdirSync(projectsFolder);
         }
-        let xliffSettingsFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'xliffSettings.json');
+        let xliffSettingsFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'xliffSettings.json');
         if (!existsSync(xliffSettingsFile)) {
             let projects: any = { projects: [] };
             writeFileSync(xliffSettingsFile, JSON.stringify(projects, null, 2));
@@ -765,7 +810,7 @@ export class Fluenta {
     }
 
     static getXliffSettings(projectId: number): any {
-        let xliffSettingsFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'xliffSettings.json');
+        let xliffSettingsFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'xliffSettings.json');
         if (existsSync(xliffSettingsFile)) {
             let data: Buffer = readFileSync(xliffSettingsFile);
             let projectsJson: any = JSON.parse(data.toString());
@@ -779,8 +824,8 @@ export class Fluenta {
         return null;
     }
 
-    static importXliff(arg: any) {
-        let paramsFile: string = Fluenta.path.join(app.getPath('temp'), 'importParams.json');
+    static importXliff(arg: any): void {
+        let paramsFile: string = join(app.getPath('temp'), 'importParams.json');
         if (existsSync(paramsFile)) {
             unlinkSync(paramsFile);
         }
@@ -807,14 +852,14 @@ export class Fluenta {
             }
         });
         Fluenta.logsDialogWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'logsDialog.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'logsDialog.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.logsDialogWindow.loadURL(fileUrl.href);
         Fluenta.logsDialogWindow.once('ready-to-show', () => {
             Fluenta.logsDialogWindow.show();
             Fluenta.cancelledProcess = false;
-            let javapath: string = process.platform === 'win32' ? Fluenta.path.join(app.getAppPath(), 'bin', 'java.exe') : Fluenta.path.join(app.getAppPath(), 'bin', 'java');
-            let javaParams: string[] = ['--module-path', 'lib', '-m', 'fluenta/com.maxprograms.fluenta.CLI', '-verbose'];
+            let javapath: string = process.platform === 'win32' ? join(app.getAppPath(), 'bin', 'java.exe') : join(app.getAppPath(), 'bin', 'java');
+            let javaParams: string[] = ['--module-path', 'lib', '-m', 'fluenta/com.maxprograms.fluenta.CLI', '-verbose', '-lang', Fluenta.preferences.lang];
             for (let param of params) {
                 javaParams.push(param);
             }
@@ -838,7 +883,7 @@ export class Fluenta {
                 } else if (!Fluenta.cancelledProcess) {
                     error();
                 }
-                Fluenta.javaProcess = null;
+                Fluenta.javaProcess = undefined;
             });
         });
     }
@@ -847,7 +892,7 @@ export class Fluenta {
         if (Fluenta.javaProcess) {
             Fluenta.cancelledProcess = true;
             Fluenta.javaProcess.kill();
-            Fluenta.javaProcess = null;
+            Fluenta.javaProcess = undefined;
             if (Fluenta.logsDialogWindow) {
                 Fluenta.logsDialogWindow.close();
             }
@@ -855,7 +900,7 @@ export class Fluenta {
         }
     }
 
-    static filesDropped(file: string) {
+    static filesDropped(file: string): void {
         if (existsSync(file) && lstatSync(file).isDirectory()) {
             return;
         }
@@ -871,7 +916,7 @@ export class Fluenta {
         }
     }
 
-    static showSystemInfo() {
+    static showSystemInfo(): void {
         Fluenta.systemInfoWindow = new BrowserWindow({
             parent: this.aboutWindow,
             width: 320,
@@ -886,7 +931,7 @@ export class Fluenta {
             }
         });
         Fluenta.systemInfoWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'systemInfo.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'systemInfo.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.systemInfoWindow.loadURL(fileUrl.href);
         Fluenta.systemInfoWindow.once('ready-to-show', () => {
@@ -897,23 +942,23 @@ export class Fluenta {
         });
     }
 
-    static getSystemInfo(event: Electron.IpcMainEvent) {
+    static getSystemInfo(event: Electron.IpcMainEvent): void {
         let versions: any = JSON.parse(this.runJava(['-about']));
         versions.electron = process.versions.electron;
         event.sender.send('set-system-info', versions);
     }
 
-    static getVersion(event: Electron.IpcMainEvent) {
+    static getVersion(event: Electron.IpcMainEvent): void {
         let json = JSON.parse(this.runJava(['-version']));
         let versionString = Fluenta.i18n.getString('fluenta', 'version');
         let version = Fluenta.i18n.format(versionString, [json.version, json.build]);
         event.sender.send('set-version', version);
     }
 
-    static getTheme(event: Electron.IpcMainEvent) {
-        let light = Fluenta.path.join(app.getAppPath(), 'css', 'light.css');
-        let dark = Fluenta.path.join(app.getAppPath(), 'css', 'dark.css');
-        let highcontrast = Fluenta.path.join(app.getAppPath(), 'css', 'highcontrast.css');
+    static getTheme(event: Electron.IpcMainEvent): void {
+        let light = join(app.getAppPath(), 'css', 'light.css');
+        let dark = join(app.getAppPath(), 'css', 'dark.css');
+        let highcontrast = join(app.getAppPath(), 'css', 'highcontrast.css');
         if (Fluenta.preferences.defaultTheme === 'system') {
             if (nativeTheme.shouldUseDarkColors) {
                 Fluenta.currentTheme = dark;
@@ -936,7 +981,7 @@ export class Fluenta {
         event.sender.send('set-theme', Fluenta.currentTheme);
     }
 
-    static createMemory(arg: any) {
+    static createMemory(arg: any): void {
         let now: string = Fluenta.i18n.formatDate(new Date());
         let memory: Memory = {
             id: new Date().getTime(),
@@ -946,7 +991,7 @@ export class Fluenta {
             creationDate: now,
             lastUpdate: now
         };
-        let memoriesFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
+        let memoriesFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
         try {
             let data: Buffer = readFileSync(memoriesFile);
             let memoriesJson: any = JSON.parse(data.toString());
@@ -987,7 +1032,7 @@ export class Fluenta {
             memories: arg.memories,
             status: '0'
         };
-        let projectsFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projects.json');
+        let projectsFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projects.json');
         try {
             let data: Buffer = readFileSync(projectsFile);
             let projectsJson: any = JSON.parse(data.toString());
@@ -1010,7 +1055,7 @@ export class Fluenta {
             creationDate: now,
             lastUpdate: now
         }
-        let memoriesFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
+        let memoriesFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
         try {
             let data: Buffer = readFileSync(memoriesFile);
             let memoriesJson: any = JSON.parse(data.toString());
@@ -1036,7 +1081,7 @@ export class Fluenta {
     }
 
     static saveProject(project: Project): void {
-        let projectsFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projects.json');
+        let projectsFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projects.json');
         try {
             let data: Buffer = readFileSync(projectsFile);
             let projectsJson: any = JSON.parse(data.toString());
@@ -1055,20 +1100,22 @@ export class Fluenta {
         }
     }
 
-    static updateMemory(arg: any) {
-        let memoriesFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
+    static updateMemory(arg: any): void {
+        let memoriesFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
         try {
             let data: Buffer = readFileSync(memoriesFile);
             let memoriesJson: any = JSON.parse(data.toString());
             let memories: Memory[] = memoriesJson.memories;
-            let memory: Memory = memories.find((memory: Memory) => memory.id === arg.memoryId);
-            memory.name = arg.name;
-            memory.description = arg.description;
-            memory.srcLanguage = arg.srcLang;
-            memory.lastUpdate = Fluenta.i18n.formatDate(new Date());
-            memory.description = arg.description;
-            memoriesJson.memories = memories;
-            writeFileSync(memoriesFile, JSON.stringify(memoriesJson, null, 2));
+            let memory: Memory | undefined = memories.find((memory: Memory) => memory.id === arg.memoryId);
+            if (memory) {
+                memory.name = arg.name;
+                memory.description = arg.description;
+                memory.srcLanguage = arg.srcLang;
+                memory.lastUpdate = Fluenta.i18n.formatDate(new Date());
+                memory.description = arg.description;
+                memoriesJson.memories = memories;
+                writeFileSync(memoriesFile, JSON.stringify(memoriesJson, null, 2));
+            }
             Fluenta.getMemories('MemoriesView');
             Fluenta.editMemoryWindow.close();
             Fluenta.mainWindow.focus();
@@ -1081,7 +1128,7 @@ export class Fluenta {
     }
 
     static getProjectDefaults(projectId: number): void {
-        let projectsFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projectDefaults.json');
+        let projectsFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projectDefaults.json');
         if (existsSync(projectsFile)) {
             try {
                 let data: Buffer = readFileSync(projectsFile);
@@ -1099,54 +1146,76 @@ export class Fluenta {
         }
     }
 
-    static getProject(projecId: number): Project {
-        let projectsFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projects.json');
+    static getProject(projecId: number): Project | undefined {
+        let projectsFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projects.json');
         try {
             let data: Buffer = readFileSync(projectsFile);
             let projectsJson: any = JSON.parse(data.toString());
             let projects: Project[] = projectsJson.projects;
-            let project: Project = projects.find((project: Project) => project.id === projecId);
+            let project: Project | undefined = projects.find((project: Project) => project.id === projecId);
             return project;
         } catch (err) {
             if (err instanceof Error) {
                 dialog.showErrorBox('Error', err.message);
             }
             console.error(err);
+            return undefined;
         }
     }
 
-    static getMemory(memoryId: number): Memory {
-        let memoriesFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
+    static getMemory(memoryId: number): Memory | undefined {
+        let memoriesFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
         try {
             let data: Buffer = readFileSync(memoriesFile);
             let memoriesJson: any = JSON.parse(data.toString());
             let memories: Memory[] = memoriesJson.memories;
-            let memory: Memory = memories.find((memory: Memory) => memory.id === memoryId);
+            let memory: Memory | undefined = memories.find((memory: Memory) => memory.id === memoryId);
             return memory;
         } catch (err) {
             if (err instanceof Error) {
                 dialog.showErrorBox('Error', err.message);
             }
             console.error(err);
+            return undefined;
         }
     }
 
-    static getProjectLanguages(projectId: number): { srcLang: LanguageInterface, tgtLangs: LanguageInterface[], removeText: string } {
-        let project: Project = Fluenta.getProject(projectId);
+    static getProjectLanguages(projectId: number): { srcLang: LanguageInterface, tgtLangs: LanguageInterface[], removeText: string } | undefined {
+        let project: Project | undefined = Fluenta.getProject(projectId);
+        if (!project) {
+            Fluenta.showMessage(MessageTypes.error, 'fluenta', 'projectNotFound');
+            return undefined;
+        }
         let langCodes: string[] = project.tgtLanguages;
         let languages: LanguageInterface[] = [];
         for (let lang of langCodes) {
-            let language: Language = LanguageUtils.getLanguage(lang, Fluenta.preferences.lang);
-            let tgtLang: LanguageInterface = { code: language.code, description: language.description };
-            languages.push(tgtLang);
+            let language: Language | undefined = LanguageUtils.getLanguage(lang, Fluenta.preferences.lang);
+            if (language) {
+                let tgtLang: LanguageInterface = { code: language.code, description: language.description };
+                languages.push(tgtLang);
+            }
         }
-        let srcLang: LanguageInterface = LanguageUtils.getLanguage(project.srcLanguage, Fluenta.preferences.lang);
-        return { srcLang, tgtLangs: languages, removeText: Fluenta.i18n.getString('fluenta', 'removeLanguage') };
+        let srcLang: Language | undefined = LanguageUtils.getLanguage(project.srcLanguage, Fluenta.preferences.lang);
+        if (!srcLang) {
+            Fluenta.showMessage(MessageTypes.error, 'fluenta', 'projectNotFound');
+            return undefined;
+        }
+        return { srcLang: { code: srcLang.code, description: srcLang.description }, tgtLangs: languages, removeText: Fluenta.i18n.getString('fluenta', 'removeLanguage') };
     }
 
     static setTargetLanguage(code: string): void {
-        let language: Language = LanguageUtils.getLanguage(code, Fluenta.preferences.lang);
-        Fluenta.addTargetLangWindow.getParentWindow().webContents.send('add-language', language);
+        let language: Language | undefined = LanguageUtils.getLanguage(code, Fluenta.preferences.lang);
+        if (!language) {
+            let msg: string = Fluenta.i18n.getString('fluenta', 'languageNotFound');
+            Fluenta.showMessage(MessageTypes.error, 'fluenta', 'format', [Fluenta.i18n.format(msg, [code])]);
+            return;
+        }
+        let parentWindow = Fluenta.addTargetLangWindow.getParentWindow();
+        if (!parentWindow) {
+            Fluenta.showMessage(MessageTypes.error, 'fluenta', 'windowNotFound');
+            return;
+        }
+        parentWindow.webContents.send('add-language', language);
         Fluenta.addTargetLangWindow.close();
     }
 
@@ -1173,7 +1242,7 @@ export class Fluenta {
             }
         });
         Fluenta.addTargetLangWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'addTargetLanguage.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'addTargetLanguage.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.addTargetLangWindow.loadURL(fileUrl.href);
         Fluenta.addTargetLangWindow.once('ready-to-show', () => {
@@ -1199,7 +1268,7 @@ export class Fluenta {
             }
         });
         Fluenta.generateXliffWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'generateXliffDialog.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'generateXliffDialog.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.generateXliffWindow.loadURL(fileUrl.href);
         Fluenta.generateXliffWindow.once('ready-to-show', () => {
@@ -1230,7 +1299,7 @@ export class Fluenta {
             }
         });
         Fluenta.importXliffWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'importXliffDialog.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'importXliffDialog.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.importXliffWindow.loadURL(fileUrl.href);
         Fluenta.importXliffWindow.once('ready-to-show', () => {
@@ -1251,7 +1320,7 @@ export class Fluenta {
         if (response === 1) {
             return;
         }
-        let projectsFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projects.json');
+        let projectsFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projects.json');
         try {
             let data: Buffer = readFileSync(projectsFile);
             let projectsJson: any = JSON.parse(data.toString());
@@ -1260,11 +1329,11 @@ export class Fluenta {
                 let index: number = projects.findIndex((project: Project) => project.id === id);
                 if (index !== -1) {
                     projects.splice(index, 1);
-                    let projectFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects', id.toString());
+                    let projectFolder: string = join(app.getPath('appData'), Fluenta.appFolder, 'projects', id.toString());
                     if (existsSync(projectFolder)) {
                         rmSync(projectFolder, { recursive: true, force: true });
                     }
-                    let memoryFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'memories', id.toString());
+                    let memoryFolder: string = join(app.getPath('appData'), Fluenta.appFolder, 'memories', id.toString());
                     if (existsSync(memoryFolder)) {
                         rmSync(memoryFolder, { recursive: true, force: true });
                     }
@@ -1272,7 +1341,7 @@ export class Fluenta {
             }
             projectsJson.projects = projects;
             writeFileSync(projectsFile, JSON.stringify(projectsJson, null, 2));
-            let memoriesFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
+            let memoriesFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
             data = readFileSync(memoriesFile);
             let memoriesJson: any = JSON.parse(data.toString());
             let memories: Memory[] = memoriesJson.memories;
@@ -1303,7 +1372,7 @@ export class Fluenta {
         if (response === 1) {
             return;
         }
-        let memoriesFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
+        let memoriesFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
         try {
             let data: Buffer = readFileSync(memoriesFile);
             let memoriesJson: any = JSON.parse(data.toString());
@@ -1312,7 +1381,7 @@ export class Fluenta {
                 let index: number = memories.findIndex((memory: Memory) => memory.id === id);
                 if (index !== -1) {
                     memories.splice(index, 1);
-                    let memoryFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'memories', id.toString());
+                    let memoryFolder: string = join(app.getPath('appData'), Fluenta.appFolder, 'memories', id.toString());
                     if (existsSync(memoryFolder)) {
                         rmSync(memoryFolder, { recursive: true, force: true });
                     }
@@ -1330,7 +1399,7 @@ export class Fluenta {
     }
 
     static browseDitaMap(event: Electron.IpcMainEvent): void {
-        let selectedPath: string[] = dialog.showOpenDialogSync(Fluenta.addProjectWindow, {
+        let selectedPath: string[] | undefined = dialog.showOpenDialogSync(Fluenta.addProjectWindow, {
             filters: [
                 { name: Fluenta.i18n.getString('fluenta', 'ditaMapFiles'), extensions: ['ditamap'] },
                 { name: Fluenta.i18n.getString('fluenta', 'allFiles'), extensions: ['*'] }
@@ -1347,11 +1416,13 @@ export class Fluenta {
     }
 
     static geDefaultLanguages(event: Electron.IpcMainEvent): void {
-        let sourceLanguage: Language = LanguageUtils.getLanguage(Fluenta.preferences.defaultSrcLang, Fluenta.preferences.lang);
+        let sourceLanguage: Language | undefined = LanguageUtils.getLanguage(Fluenta.preferences.defaultSrcLang, Fluenta.preferences.lang);
         let targetLanguages: Language[] = [];
         for (let code of Fluenta.preferences.defaultTgtLang) {
-            let targetLanguage: Language = LanguageUtils.getLanguage(code, Fluenta.preferences.lang);
-            targetLanguages.push(targetLanguage);
+            let targetLanguage: Language | undefined = LanguageUtils.getLanguage(code, Fluenta.preferences.lang);
+            if (targetLanguage) {
+                targetLanguages.push(targetLanguage);
+            }
         }
         event.sender.send('set-default-languages', { srcLang: sourceLanguage, tgtLangs: targetLanguages, removeText: Fluenta.i18n.getString('fluenta', 'removeLanguage') });
     }
@@ -1421,11 +1492,11 @@ export class Fluenta {
     }
 
     static getProjects(): void {
-        let projectsFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects');
+        let projectsFolder: string = join(app.getPath('appData'), Fluenta.appFolder, 'projects');
         if (!existsSync(projectsFolder)) {
             mkdirSync(projectsFolder);
         }
-        let projectsFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projects.json');
+        let projectsFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'projects', 'projects.json');
         if (!existsSync(projectsFile)) {
             let projects: any = { projects: [] };
             writeFileSync(projectsFile, JSON.stringify(projects, null, 2));
@@ -1448,11 +1519,11 @@ export class Fluenta {
     }
 
     static getMemories(from: string): void {
-        let memoriesFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'memories');
+        let memoriesFolder: string = join(app.getPath('appData'), Fluenta.appFolder, 'memories');
         if (!existsSync(memoriesFolder)) {
             mkdirSync(memoriesFolder);
         }
-        let memoriesFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
+        let memoriesFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'memories', 'memories.json');
         if (!existsSync(memoriesFile)) {
             let memories: any = { memories: [] };
             writeFileSync(memoriesFile, JSON.stringify(memories, null, 2));
@@ -1487,15 +1558,19 @@ export class Fluenta {
         if (params) {
             message = Fluenta.i18n.format(message, params);
         }
-        dialog.showMessageBoxSync(BrowserWindow.getFocusedWindow(), { type: type, message: message });
+        let parentWindow: BrowserWindow | null = BrowserWindow.getFocusedWindow();
+        if (!parentWindow) {
+            parentWindow = Fluenta.mainWindow;
+        }
+        dialog.showMessageBoxSync(parentWindow, { type: type, message: message });
     }
 
     static createWindow(): void {
-        let preferencesFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder);
+        let preferencesFolder: string = join(app.getPath('appData'), Fluenta.appFolder);
         if (!existsSync(preferencesFolder)) {
             mkdirSync(preferencesFolder);
         }
-        let defaultsFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'defaults.json');
+        let defaultsFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'defaults.json');
         if (!existsSync(defaultsFile)) {
             let size: Size = screen.getPrimaryDisplay().workAreaSize;
             Fluenta.currentDefaults = { width: Math.round(size.width * 0.9), height: Math.round(size.height * 0.9), x: 0, y: 0 };
@@ -1553,6 +1628,12 @@ export class Fluenta {
         this.mainWindow.on('move', () => {
             writeFileSync(defaultsFile, JSON.stringify(Fluenta.mainWindow.getBounds(), null, 2));
         });
+        Fluenta.createMenu();
+    }
+
+    static createMenu(): void {
+        const iconFolder: string = nativeTheme.shouldUseHighContrastColors ? 'dark' : (nativeTheme.shouldUseDarkColors ? 'dark' : 'light');
+
         let editMenu: Menu = Menu.buildFromTemplate([
             { label: 'Cut', accelerator: 'CmdOrCtrl+X', click: () => { Fluenta.cut(); } },
             { label: 'Copy', accelerator: 'CmdOrCtrl+C', click: () => { Fluenta.copy(); } },
@@ -1560,36 +1641,36 @@ export class Fluenta {
             { label: 'Select All', accelerator: 'CmdOrCtrl+A', click: () => { Fluenta.selectAll(); } }
         ]);
         let viewMenu: Menu = Menu.buildFromTemplate([
-            { label: Fluenta.i18n.getString('menu', 'projects'), accelerator: 'CmdOrCtrl+1', click: () => { Fluenta.mainWindow.webContents.send('show-projects'); } },
-            { label: Fluenta.i18n.getString('menu', 'memories'), accelerator: 'CmdOrCtrl+2', click: () => { Fluenta.mainWindow.webContents.send('show-memories'); } },
+            { label: Fluenta.i18n.getString('menu', 'projects'), accelerator: 'CmdOrCtrl+1', click: () => { Fluenta.mainWindow.webContents.send('show-projects'); }, icon: join(app.getAppPath(), 'img', iconFolder, 'projects.png') },
+            { label: Fluenta.i18n.getString('menu', 'memories'), accelerator: 'CmdOrCtrl+2', click: () => { Fluenta.mainWindow.webContents.send('show-memories'); }, icon: join(app.getAppPath(), 'img', iconFolder, 'memories.png') },
             new MenuItem({ type: 'separator' }),
             { label: Fluenta.i18n.getString('menu', 'toggleFullScreen'), role: 'togglefullscreen' }
         ]);
         if (!app.isPackaged) {
-            viewMenu.append(new MenuItem({ label: Fluenta.i18n.getString('menu', 'openDevTools'), accelerator: 'F12', click: () => { BrowserWindow.getFocusedWindow().webContents.openDevTools(); } }));
+            viewMenu.append(new MenuItem({ label: Fluenta.i18n.getString('menu', 'openDevTools'), accelerator: 'F12', click: () => { BrowserWindow.getFocusedWindow()?.webContents.openDevTools(); } }));
         }
         let projectsMenu: Menu = Menu.buildFromTemplate([
-            { label: Fluenta.i18n.getString('menu', 'addProject'), click: () => { this.showAddProject(); } },
-            { label: Fluenta.i18n.getString('menu', 'editProject'), click: () => { Fluenta.mainWindow.webContents.send('edit-project'); } },
-            { label: Fluenta.i18n.getString('menu', 'removeProject'), click: () => { Fluenta.mainWindow.webContents.send('request-remove-project') } },
+            { label: Fluenta.i18n.getString('menu', 'addProject'), click: () => { this.showAddProject(); }, icon: join(app.getAppPath(), 'img', iconFolder, 'add.png') },
+            { label: Fluenta.i18n.getString('menu', 'editProject'), click: () => { Fluenta.mainWindow.webContents.send('edit-project'); }, icon: join(app.getAppPath(), 'img', iconFolder, 'edit.png') },
+            { label: Fluenta.i18n.getString('menu', 'removeProject'), click: () => { Fluenta.mainWindow.webContents.send('request-remove-project') }, icon: join(app.getAppPath(), 'img', iconFolder, 'remove.png') },
             new MenuItem({ type: 'separator' }),
-            { label: Fluenta.i18n.getString('menu', 'projectInfo'), click: () => { Fluenta.mainWindow.webContents.send('project-info'); } },
+            { label: Fluenta.i18n.getString('menu', 'projectInfo'), click: () => { Fluenta.mainWindow.webContents.send('project-info'); }, icon: join(app.getAppPath(), 'img', iconFolder, 'projectStatus.png') },
             new MenuItem({ type: 'separator' }),
-            { label: Fluenta.i18n.getString('menu', 'generateXLIFF'), click: () => { Fluenta.mainWindow.webContents.send('generate-xliff'); } },
-            { label: Fluenta.i18n.getString('menu', 'importXLIFF'), click: () => { Fluenta.mainWindow.webContents.send('import-xliff'); } }
+            { label: Fluenta.i18n.getString('menu', 'generateXLIFF'), click: () => { Fluenta.mainWindow.webContents.send('generate-xliff'); }, icon: join(app.getAppPath(), 'img', iconFolder, 'generateXLIFF.png') },
+            { label: Fluenta.i18n.getString('menu', 'importXLIFF'), click: () => { Fluenta.mainWindow.webContents.send('import-xliff'); }, icon: join(app.getAppPath(), 'img', iconFolder, 'import.png') }
         ]);
         let memoriesMenu: Menu = Menu.buildFromTemplate([
-            { label: Fluenta.i18n.getString('menu', 'addMemory'), click: () => { Fluenta.showAddMemory(); } },
-            { label: Fluenta.i18n.getString('menu', 'editMemory'), click: () => { Fluenta.mainWindow.webContents.send('edit-memory'); } },
-            { label: Fluenta.i18n.getString('menu', 'removeMemory'), click: () => { Fluenta.mainWindow.webContents.send('request-remove-memory') } },
+            { label: Fluenta.i18n.getString('menu', 'addMemory'), click: () => { Fluenta.showAddMemory(); }, icon: join(app.getAppPath(), 'img', iconFolder, 'add.png') },
+            { label: Fluenta.i18n.getString('menu', 'editMemory'), click: () => { Fluenta.mainWindow.webContents.send('edit-memory'); }, icon: join(app.getAppPath(), 'img', iconFolder, 'edit.png') },
+            { label: Fluenta.i18n.getString('menu', 'removeMemory'), click: () => { Fluenta.mainWindow.webContents.send('request-remove-memory') }, icon: join(app.getAppPath(), 'img', iconFolder, 'remove.png') },
             new MenuItem({ type: 'separator' }),
-            { label: Fluenta.i18n.getString('menu', 'importTMX'), click: () => { Fluenta.mainWindow.webContents.send('import-tmx'); } },
-            { label: Fluenta.i18n.getString('menu', 'exportTMX'), click: () => { Fluenta.mainWindow.webContents.send('export-tmx'); } }
+            { label: Fluenta.i18n.getString('menu', 'importTMX'), click: () => { Fluenta.mainWindow.webContents.send('import-tmx'); }, icon: join(app.getAppPath(), 'img', iconFolder, 'import.png') },
+            { label: Fluenta.i18n.getString('menu', 'exportTMX'), click: () => { Fluenta.mainWindow.webContents.send('export-tmx'); }, icon: join(app.getAppPath(), 'img', iconFolder, 'export.png') }
         ]);
         let helpMenu: Menu = Menu.buildFromTemplate([
             { label: Fluenta.i18n.getString('menu', 'userGuide'), accelerator: 'F1', click: () => { this.showHelp(); } },
             new MenuItem({ type: 'separator' }),
-            { label: Fluenta.i18n.getString('menu', 'checkUpdates'), click: () => { this.checkUpdates(false); } },
+            { label: Fluenta.i18n.getString('menu', 'checkUpdates'), click: () => { this.checkUpdates(false); }, icon: join(app.getAppPath(), 'img', iconFolder, 'updates.png') },
             { label: Fluenta.i18n.getString('menu', 'viewLicenses'), click: () => { this.showLicenses('menu'); } },
             new MenuItem({ type: 'separator' }),
             { label: Fluenta.i18n.getString('menu', 'releaseHistory'), click: () => { Fluenta.showReleaseHistory(); } },
@@ -1598,8 +1679,8 @@ export class Fluenta {
         let template: MenuItem[];
         if (process.platform === 'darwin') {
             let appleMenu: Menu = Menu.buildFromTemplate([
-                new MenuItem({ label: Fluenta.i18n.getString('menu', 'about'), click: () => { this.showAbout(); } }),
-                new MenuItem({ label: Fluenta.i18n.getString('menu', 'settings'), accelerator: 'Cmd+,', click: () => { this.showSettings(); } }),
+                new MenuItem({ label: Fluenta.i18n.getString('menu', 'about'), click: () => { this.showAbout(); }, icon: join(app.getAppPath(), 'img', iconFolder, 'about.png') }),
+                new MenuItem({ label: Fluenta.i18n.getString('menu', 'settings'), accelerator: 'Cmd+,', click: () => { this.showSettings(); }, icon: join(app.getAppPath(), 'img', iconFolder, 'settings.png') }),
                 new MenuItem({ type: 'separator' }),
                 new MenuItem({
                     label: 'Services', role: 'services', submenu: [
@@ -1619,7 +1700,17 @@ export class Fluenta {
             ];
         } else {
             let fileMenu: Menu = Menu.buildFromTemplate([]);
-            let settingsMenu: Menu = Menu.buildFromTemplate([{ label: Fluenta.i18n.getString('menu', 'preferencesSubMenu'), click: () => { this.showSettings(); } }]);
+            let settingsMenu: Menu = Menu.buildFromTemplate([{ label: Fluenta.i18n.getString('menu', 'preferencesSubMenu'), click: () => { this.showSettings(); }, icon: join(app.getAppPath(), 'img', iconFolder, 'settings.png') }]);
+            if (process.platform === 'win32') {
+                fileMenu.append(new MenuItem({ label: Fluenta.i18n.getString('menu', 'exitWindows'), accelerator: 'Alt+F4', role: 'quit', click: () => { app.quit(); } }));
+                helpMenu.append(new MenuItem({ type: 'separator' }));
+                helpMenu.append(new MenuItem({ label: Fluenta.i18n.getString('menu', 'about'), click: () => { this.showAbout(); }, icon: join(app.getAppPath(), 'img', iconFolder, 'about.png') }));
+            }
+            if (process.platform === 'linux') {
+                fileMenu.append(new MenuItem({ label: Fluenta.i18n.getString('menu', 'quitLinux'), accelerator: 'Ctrl+Q', role: 'quit', click: () => { app.quit(); } }));
+                helpMenu.append(new MenuItem({ type: 'separator' }));
+                helpMenu.append(new MenuItem({ label: Fluenta.i18n.getString('menu', 'about'), click: () => { this.showAbout(); }, icon: join(app.getAppPath(), 'img', iconFolder, 'about.png') }));
+            }
             template = [
                 new MenuItem({ label: Fluenta.i18n.getString('menu', 'fileMenu'), role: 'fileMenu', submenu: fileMenu }),
                 new MenuItem({ label: Fluenta.i18n.getString('menu', 'editMenu'), role: 'editMenu', submenu: editMenu }),
@@ -1629,16 +1720,6 @@ export class Fluenta {
                 new MenuItem({ label: Fluenta.i18n.getString('menu', 'settingsMenu'), submenu: settingsMenu }),
                 new MenuItem({ label: Fluenta.i18n.getString('menu', 'helpMenu'), role: 'help', submenu: helpMenu })
             ];
-        }
-        if (process.platform === 'win32') {
-            template[0].submenu.append(new MenuItem({ label: Fluenta.i18n.getString('menu', 'exitWindows'), accelerator: 'Alt+F4', role: 'quit', click: () => { app.quit(); } }));
-            template[6].submenu.append(new MenuItem({ type: 'separator' }));
-            template[6].submenu.append(new MenuItem({ label: Fluenta.i18n.getString('menu', 'about'), click: () => { this.showAbout(); } }));
-        }
-        if (process.platform === 'linux') {
-            template[0].submenu.append(new MenuItem({ label: Fluenta.i18n.getString('menu', 'quitLinux'), accelerator: 'Ctrl+Q', role: 'quit', click: () => { app.quit(); } }));
-            template[6].submenu.append(new MenuItem({ type: 'separator' }));
-            template[6].submenu.append(new MenuItem({ label: Fluenta.i18n.getString('menu', 'about'), click: () => { this.showAbout(); } }));
         }
         Menu.setApplicationMenu(Menu.buildFromTemplate(template));
     }
@@ -1658,7 +1739,7 @@ export class Fluenta {
             },
         });
         Fluenta.settingsWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'settingsDialog.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'settingsDialog.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.settingsWindow.loadURL(fileUrl.href);
         Fluenta.settingsWindow.once('ready-to-show', () => {
@@ -1686,7 +1767,7 @@ export class Fluenta {
             }
         });
         Fluenta.addConfigurationFileWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'addConfigurationFile.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'addConfigurationFile.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.addConfigurationFileWindow.loadURL(fileUrl.href);
         Fluenta.addConfigurationFileWindow.once('ready-to-show', () => {
@@ -1698,7 +1779,7 @@ export class Fluenta {
     }
 
     static addConfigurationFile(rootName: string): void {
-        let configFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter', 'config_' + rootName + '.xml');
+        let configFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter', 'config_' + rootName + '.xml');
         if (existsSync(configFile)) {
             dialog.showErrorBox('Error', Fluenta.i18n.getString('addConfigurationDialog', 'configExists'));
             return;
@@ -1716,7 +1797,7 @@ export class Fluenta {
 
     static removeFilters(filters: string[]): void {
         for (let file of filters) {
-            let configFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter', file);
+            let configFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter', file);
             rmSync(configFile, { force: true });
         }
         let filterFiles: string[] = Fluenta.getFilterFiles();
@@ -1742,7 +1823,7 @@ export class Fluenta {
             }
         });
         Fluenta.editConfigurationFileWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'filterConfig.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'filterConfig.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.editConfigurationFileWindow.loadURL(fileUrl.href);
         Fluenta.editConfigurationFileWindow.once('ready-to-show', () => {
@@ -1755,18 +1836,23 @@ export class Fluenta {
         });
     }
 
-    static getFilterData(filter: string): any {
-        let configFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter', filter);
+    static getFilterData(filter: string): any | undefined {
+        let configFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter', filter);
         let contentHandler: ContentHandler = new DOMBuilder();
         let xmlParser = new SAXParser();
         xmlParser.setContentHandler(contentHandler);
         xmlParser.parseFile(configFile);
-        let doc: XMLDocument = (contentHandler as DOMBuilder).getDocument();
-        let root: XMLElement = doc.getRoot();
-        let data: any = Fluenta.filter2json(root);
-        data.filter = filter;
-        data.yes = Fluenta.i18n.getString('fluenta', 'yes');
-        return data;
+        let doc: XMLDocument | undefined = (contentHandler as DOMBuilder).getDocument();
+        if (doc) {
+            let root: XMLElement | undefined = doc.getRoot();
+            if (root) {
+                let data: any = Fluenta.filter2json(root);
+                data.filter = filter;
+                data.yes = Fluenta.i18n.getString('fluenta', 'yes');
+                return data;
+            }
+        }
+        return undefined;
     }
 
     static filter2json(root: XMLElement): any {
@@ -1792,8 +1878,10 @@ export class Fluenta {
         }
         let children: Array<XMLElement> = root.getChildren();
         children = children.sort((a: XMLElement, b: XMLElement) => {
-            let x: string = a.getAttribute('hard-break').getValue();
-            let y: string = b.getAttribute('hard-break').getValue();
+            let attributeA: XMLAttribute | undefined = a.getAttribute('hard-break');
+            let attributeB: XMLAttribute | undefined = b.getAttribute('hard-break');
+            let x: string = attributeA ? attributeA.getValue() : '';
+            let y: string = attributeB ? attributeB.getValue() : '';
             if (x < y) { return 1; }
             if (x > y) { return -1; }
             x = a.getName().toLowerCase();
@@ -1839,7 +1927,7 @@ export class Fluenta {
             }
         });
         Fluenta.elementConfigWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'elementConfig.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'elementConfig.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.elementConfigWindow.loadURL(fileUrl.href);
         Fluenta.elementConfigWindow.once('ready-to-show', () => {
@@ -1852,101 +1940,115 @@ export class Fluenta {
     }
 
     static saveElementConfig(arg: ElementConfiguration): void {
-        let configFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter', arg.filter);
+        let configFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter', arg.filter);
         let contentHandler: ContentHandler = new DOMBuilder();
         let xmlParser = new SAXParser();
         xmlParser.setContentHandler(contentHandler);
         xmlParser.parseFile(configFile);
-        let doc: XMLDocument = (contentHandler as DOMBuilder).getDocument();
-        let root: XMLElement = doc.getRoot();
-        let found: boolean = false;
-        let tags: Array<XMLElement> = root.getChildren();
-        for (let tag of tags) {
-            let content: Array<XMLNode> = tag.getContent();
-            for (let node of content) {
-                if (node instanceof TextNode && node.getValue().trim() === arg.name) {
-                    tag.setAttribute(new XMLAttribute('hard-break', arg.type));
+        let doc: XMLDocument | undefined = (contentHandler as DOMBuilder).getDocument();
+        if (doc) {
+            let root: XMLElement | undefined = doc.getRoot();
+            if (root) {
+                let found: boolean = false;
+                let tags: Array<XMLElement> = root.getChildren();
+                for (let tag of tags) {
+                    let content: Array<XMLNode> = tag.getContent();
+                    for (let node of content) {
+                        if (node instanceof TextNode && node.getValue().trim() === arg.name) {
+                            tag.setAttribute(new XMLAttribute('hard-break', arg.type));
+                            if (arg.inline !== '') {
+                                tag.setAttribute(new XMLAttribute('ctype', arg.inline));
+                            } else {
+                                tag.removeAttribute('ctype');
+                            }
+                            if (arg.keepSpace !== '') {
+                                tag.setAttribute(new XMLAttribute('keep-format', arg.keepSpace));
+                            } else {
+                                tag.removeAttribute('keep-format');
+                            }
+                            if (arg.attributes !== '') {
+                                tag.setAttribute(new XMLAttribute('attributes', arg.attributes));
+                            } else {
+                                tag.removeAttribute('attributes');
+                            }
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!found) {
+                    let element: XMLElement = new XMLElement('tag');
+                    element.addString(arg.name);
+                    element.setAttribute(new XMLAttribute('hard-break', arg.type));
                     if (arg.inline !== '') {
-                        tag.setAttribute(new XMLAttribute('ctype', arg.inline));
-                    } else {
-                        tag.removeAttribute('ctype');
+                        element.setAttribute(new XMLAttribute('ctype', arg.inline));
                     }
                     if (arg.keepSpace !== '') {
-                        tag.setAttribute(new XMLAttribute('keep-format', arg.keepSpace));
-                    } else {
-                        tag.removeAttribute('keep-format');
+                        element.setAttribute(new XMLAttribute('keep-format', arg.keepSpace));
                     }
                     if (arg.attributes !== '') {
-                        tag.setAttribute(new XMLAttribute('attributes', arg.attributes));
-                    } else {
-                        tag.removeAttribute('attributes');
+                        element.setAttribute(new XMLAttribute('attributes', arg.attributes));
                     }
-                    found = true;
-                    break;
+                    root.addElement(element);
                 }
+                let indenter: Indenter = new Indenter(2);
+                indenter.indent(root);
+                XMLWriter.writeDocument(doc, configFile);
+                let data: any = Fluenta.filter2json(root);
+                data.filter = arg.filter;
+                data.yes = Fluenta.i18n.getString('fluenta', 'yes');
+                Fluenta.editConfigurationFileWindow.webContents.send('set-filterData', data);
             }
         }
-        if (!found) {
-            let element: XMLElement = new XMLElement('tag');
-            element.addString(arg.name);
-            element.setAttribute(new XMLAttribute('hard-break', arg.type));
-            if (arg.inline !== '') {
-                element.setAttribute(new XMLAttribute('ctype', arg.inline));
-            }
-            if (arg.keepSpace !== '') {
-                element.setAttribute(new XMLAttribute('keep-format', arg.keepSpace));
-            }
-            if (arg.attributes !== '') {
-                element.setAttribute(new XMLAttribute('attributes', arg.attributes));
-            }
-            root.addElement(element);
-        }
-        let indenter: Indenter = new Indenter(2);
-        indenter.indent(root);
-        XMLWriter.writeDocument(doc, configFile);
-        let data: any = Fluenta.filter2json(root);
-        data.filter = arg.filter;
-        data.yes = Fluenta.i18n.getString('fluenta', 'yes');
-        Fluenta.editConfigurationFileWindow.webContents.send('set-filterData', data);
         Fluenta.elementConfigWindow.close();
     }
 
     static removeElements(filter: string, elements: string[]): void {
-        let configFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter', filter);
+        let configFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'xmlfilter', filter);
         let contentHandler: ContentHandler = new DOMBuilder();
         let xmlParser = new SAXParser();
         xmlParser.setContentHandler(contentHandler);
         xmlParser.parseFile(configFile);
-        let doc: XMLDocument = (contentHandler as DOMBuilder).getDocument();
-        let root: XMLElement = doc.getRoot();
-        let newContent: Array<XMLNode> = [];
-        let tags: Array<XMLElement> = root.getChildren();
-        for (let tag of tags) {
-            let content: Array<XMLNode> = tag.getContent();
-            for (let node of content) {
-                if (node instanceof TextNode) {
-                    let name: string = node.getValue().trim();
-                    if (elements.indexOf(name) === -1) {
-                        newContent.push(tag);
+        let doc: XMLDocument | undefined = (contentHandler as DOMBuilder).getDocument();
+        if (doc) {
+            let root: XMLElement | undefined = doc.getRoot();
+            if (root) {
+                let newContent: Array<XMLNode> = [];
+                let tags: Array<XMLElement> = root.getChildren();
+                for (let tag of tags) {
+                    let content: Array<XMLNode> = tag.getContent();
+                    for (let node of content) {
+                        if (node instanceof TextNode) {
+                            let name: string = node.getValue().trim();
+                            if (elements.indexOf(name) === -1) {
+                                newContent.push(tag);
+                            }
+                            break;
+                        }
                     }
-                    break;
                 }
+                root.setContent(newContent);
+                let indenter: Indenter = new Indenter(2);
+                indenter.indent(root);
             }
+            XMLWriter.writeDocument(doc, configFile);
         }
-        root.setContent(newContent);
-        let indenter: Indenter = new Indenter(2);
-        indenter.indent(root);
-        XMLWriter.writeDocument(doc, configFile);
         let data: any = this.getFilterData(filter);
         Fluenta.editConfigurationFileWindow.webContents.send('set-filterData', data);
     }
 
     static showStatus(projectId: number): void {
-        let project: Project = this.getProject(projectId);
+        let project: Project | undefined = this.getProject(projectId);
+        if (!project) {
+            Fluenta.showMessage(MessageTypes.error, 'fluenta', 'projectNotFound');
+            return;
+        }
         let langMap: Map<string, string> = new Map<string, string>();
         for (let lang of project.tgtLanguages) {
-            let language: Language = LanguageUtils.getLanguage(lang, Fluenta.preferences.lang);
-            langMap.set(language.code, language.description);
+            let language: Language | undefined = LanguageUtils.getLanguage(lang, Fluenta.preferences.lang);
+            if (language) {
+                langMap.set(language.code, language.description);
+            }
         }
         Fluenta.statusWindow = new BrowserWindow({
             parent: this.mainWindow,
@@ -1962,7 +2064,7 @@ export class Fluenta {
             },
         });
         Fluenta.statusWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'statusDialog.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'statusDialog.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.statusWindow.loadURL(fileUrl.href);
         Fluenta.statusWindow.once('ready-to-show', () => {
@@ -1975,7 +2077,7 @@ export class Fluenta {
     }
 
     static savePreferences(arg: Preferences, close: boolean): void {
-        let preferencesFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'preferences.json');
+        let preferencesFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'preferences.json');
         writeFileSync(preferencesFile, JSON.stringify(arg, null, 2));
         if (app.isReady() && arg.lang !== Fluenta.preferences.lang) {
             dialog.showMessageBox({
@@ -1991,9 +2093,9 @@ export class Fluenta {
             });
         }
         Fluenta.preferences = arg;
-        let light = Fluenta.path.join(app.getAppPath(), 'css', 'light.css');
-        let dark = Fluenta.path.join(app.getAppPath(), 'css', 'dark.css');
-        let highcontrast = Fluenta.path.join(app.getAppPath(), 'css', 'highcontrast.css');
+        let light = join(app.getAppPath(), 'css', 'light.css');
+        let dark = join(app.getAppPath(), 'css', 'dark.css');
+        let highcontrast = join(app.getAppPath(), 'css', 'highcontrast.css');
         if (Fluenta.preferences.defaultTheme === 'system') {
             if (nativeTheme.shouldUseDarkColors) {
                 Fluenta.currentTheme = dark;
@@ -2023,11 +2125,11 @@ export class Fluenta {
     }
 
     static loadPreferences(): void {
-        let preferencesFolder: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder);
+        let preferencesFolder: string = join(app.getPath('appData'), Fluenta.appFolder);
         if (!existsSync(preferencesFolder)) {
             mkdirSync(preferencesFolder);
         }
-        let preferencesFile: string = Fluenta.path.join(app.getPath('appData'), Fluenta.appFolder, 'preferences.json');
+        let preferencesFile: string = join(app.getPath('appData'), Fluenta.appFolder, 'preferences.json');
         if (!existsSync(preferencesFile)) {
             // write the default created on startup
             writeFileSync(preferencesFile, JSON.stringify(Fluenta.preferences, null, 2));
@@ -2035,6 +2137,9 @@ export class Fluenta {
         try {
             let data: Buffer = readFileSync(preferencesFile);
             Fluenta.preferences = JSON.parse(data.toString());
+            if (Fluenta.preferences.maxThreads === undefined) {
+                Fluenta.preferences.maxThreads = cpus().length;
+            }
         } catch (err) {
             console.error(err);
         }
@@ -2055,7 +2160,7 @@ export class Fluenta {
             }
         });
         Fluenta.aboutWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'about.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'about.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.aboutWindow.loadURL(fileUrl.href);
         Fluenta.aboutWindow.once('ready-to-show', () => {
@@ -2092,15 +2197,19 @@ export class Fluenta {
         }
     }
 
-    static selectAll() {
+    static selectAll(): void {
         let window: BrowserWindow | null = BrowserWindow.getFocusedWindow();
         if (window) {
             window.webContents.selectAll();
         }
     }
 
-    static editSelectedProject(projectId: number) {
-        let selectedProject: Project = Fluenta.getProject(projectId);
+    static editSelectedProject(projectId: number): void {
+        let selectedProject: Project | undefined = Fluenta.getProject(projectId);
+        if (!selectedProject) {
+            Fluenta.showMessage(MessageTypes.error, 'fluenta', 'projectNotFound');
+            return;
+        }
         Fluenta.editProjectWindow = new BrowserWindow({
             parent: this.mainWindow,
             width: 570,
@@ -2115,7 +2224,7 @@ export class Fluenta {
             }
         });
         Fluenta.editProjectWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'editProjectDialog.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'editProjectDialog.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.editProjectWindow.loadURL(fileUrl.href);
         Fluenta.editProjectWindow.once('ready-to-show', () => {
@@ -2127,8 +2236,12 @@ export class Fluenta {
         });
     }
 
-    static editSelectedMemory(memoryId: number) {
-        let selectedMemory: Memory = Fluenta.getMemory(memoryId);
+    static editSelectedMemory(memoryId: number): void {
+        let selectedMemory: Memory | undefined = Fluenta.getMemory(memoryId);
+        if (!selectedMemory) {
+            Fluenta.showMessage(MessageTypes.error, 'fluenta', 'memoryNotFound');
+            return;
+        }
         Fluenta.editMemoryWindow = new BrowserWindow({
             parent: this.mainWindow,
             width: 570,
@@ -2143,7 +2256,7 @@ export class Fluenta {
             }
         });
         Fluenta.editMemoryWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'editMemoryDialog.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'editMemoryDialog.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.editMemoryWindow.loadURL(fileUrl.href);
         Fluenta.editMemoryWindow.once('ready-to-show', () => {
@@ -2170,7 +2283,7 @@ export class Fluenta {
             }
         });
         Fluenta.addProjectWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'addProjectDialog.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'addProjectDialog.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.addProjectWindow.loadURL(fileUrl.href);
         Fluenta.addProjectWindow.once('ready-to-show', () => {
@@ -2182,7 +2295,7 @@ export class Fluenta {
     }
 
     static saveProjectMemories(memories: number[]): void {
-        Fluenta.projectMemoriesWindow.getParentWindow().webContents.send('set-memories', memories);
+        Fluenta.projectMemoriesWindow.getParentWindow()?.webContents.send('set-memories', memories);
         Fluenta.projectMemoriesWindow.close();
     }
 
@@ -2203,7 +2316,7 @@ export class Fluenta {
             }
         });
         Fluenta.projectMemoriesWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'projectMemoriesDialog.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'projectMemoriesDialog.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.projectMemoriesWindow.loadURL(fileUrl.href);
         Fluenta.projectMemoriesWindow.once('ready-to-show', () => {
@@ -2229,7 +2342,7 @@ export class Fluenta {
             }
         });
         Fluenta.addMemoryWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'addMemoryDialog.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'addMemoryDialog.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.addMemoryWindow.loadURL(fileUrl.href);
         Fluenta.addMemoryWindow.once('ready-to-show', () => {
@@ -2242,7 +2355,7 @@ export class Fluenta {
 
     static runJava(arg: string[]): string {
         Fluenta.javaErrors = false;
-        let javapath: string = process.platform === 'win32' ? Fluenta.path.join(app.getAppPath(), 'bin', 'java.exe') : Fluenta.path.join(app.getAppPath(), 'bin', 'java');
+        let javapath: string = process.platform === 'win32' ? join(app.getAppPath(), 'bin', 'java.exe') : join(app.getAppPath(), 'bin', 'java');
         let params: string[] = ['--module-path', 'lib', '-m', 'fluenta/com.maxprograms.fluenta.CLI'];
         if (arg) {
             params = params.concat(arg);
@@ -2260,9 +2373,9 @@ export class Fluenta {
     static showHelp(): void {
         let helpFile: string = '';
         if (Fluenta.preferences.lang === 'en') {
-            helpFile = 'file://' + Fluenta.path.join(app.getAppPath(), 'fluenta_en.pdf');
+            helpFile = 'file://' + join(app.getAppPath(), 'fluenta_en.pdf');
         } else if (Fluenta.preferences.lang === 'es') {
-            helpFile = 'file://' + Fluenta.path.join(app.getAppPath(), 'fluenta_es.pdf');
+            helpFile = 'file://' + join(app.getAppPath(), 'fluenta_es.pdf');
         }
         shell.openExternal(helpFile).catch((error: Error) => {
             dialog.showErrorBox('Error', error.message);
@@ -2284,7 +2397,7 @@ export class Fluenta {
             }
         });
         Fluenta.licensesWindow.setMenu(null);
-        let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'licenses.html');
+        let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'licenses.html');
         let fileUrl: URL = new URL('file://' + filePath);
         Fluenta.licensesWindow.loadURL(fileUrl.href);
         Fluenta.licensesWindow.once('ready-to-show', () => {
@@ -2295,18 +2408,24 @@ export class Fluenta {
         });
     }
 
-    static openLicense(type: string) {
-        let licenseFile = '';
-        let title = '';
+    static openLicense(type: string): void {
+        let licenseFile: string = '';
+        let title: string = '';
         switch (type) {
             case 'Fluenta':
             case 'Swordfish':
             case "OpenXLIFF":
-            case "XMLJava":
-            case "BCP47J":
             case "TypesBCP47":
                 licenseFile = 'EclipsePublicLicense1.0.html';
                 title = 'Eclipse Public License 1.0';
+                break;
+            case "XMLJava":
+                licenseFile = 'xmljava.html';
+                title = 'Custom License';
+                break;
+            case "BCP47J":
+                licenseFile = 'bcp47j.html';
+                title = 'Custom License';
                 break;
             case "electron":
                 licenseFile = 'electron.txt';
@@ -2328,10 +2447,6 @@ export class Fluenta {
                 licenseFile = 'jsoup.txt';
                 title = 'MIT License';
                 break;
-            case "DTDParser":
-                licenseFile = 'LGPL2.1.txt';
-                title = 'LGPL 2.1';
-                break;
             default:
                 Fluenta.showMessage(MessageTypes.error, 'fluenta', 'unknownLicense');
                 return;
@@ -2349,7 +2464,7 @@ export class Fluenta {
             }
         });
         licenseWindow.setMenu(null);
-        let filePath = this.path.join(app.getAppPath(), 'html', 'licenses', licenseFile);
+        let filePath: string = join(app.getAppPath(), 'html', 'licenses', licenseFile);
         let fileUrl: URL = new URL('file://' + filePath);
         licenseWindow.loadURL(fileUrl.href);
         licenseWindow.once('ready-to-show', () => {
@@ -2446,7 +2561,7 @@ export class Fluenta {
                                 }
                             });
                             Fluenta.updatesWindow.setMenu(null);
-                            let filePath = Fluenta.path.join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'updates.html');
+                            let filePath = join(app.getAppPath(), 'html', Fluenta.preferences.lang, 'updates.html');
                             let fileUrl: URL = new URL('file://' + filePath);
                             Fluenta.updatesWindow.loadURL(fileUrl.href);
                             Fluenta.updatesWindow.once('ready-to-show', () => {
@@ -2478,8 +2593,8 @@ export class Fluenta {
         });
     }
 
-    static downloadUpdate() {
-        let downloadsFolder = app.getPath('downloads');
+    static downloadUpdate(): void {
+        let downloadsFolder: string = app.getPath('downloads');
         let url: URL = new URL(Fluenta.downloadLink);
         let path: string = url.pathname;
         path = path.substring(path.lastIndexOf('/') + 1);
@@ -2502,7 +2617,7 @@ export class Fluenta {
                 dialog.showErrorBox('Error', Fluenta.i18n.format(httpError, [response.statusCode.toString()]));
                 return;
             }
-            let fileSize = Number.parseInt(response.headers['content-length'] as string);
+            let fileSize: number = Number.parseInt(response.headers['content-length'] as string);
             let received: number = 0;
             let download: string = Fluenta.i18n.getString('fluenta', 'downloaded');
             response.on('data', (chunk: Buffer) => {

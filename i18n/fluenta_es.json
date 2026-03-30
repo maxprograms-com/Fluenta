@@ -47,7 +47,11 @@
     "languageChanged": "La configuración de idioma se aplicará en el próximo inicio",
     "restart": "Reiniciar Ahora",
     "dismiss": "Ignorar",
-        "javaProcessRunning": "Se está ejecutando un proceso. Cancélelo antes de cerrar Fluenta."
+        "javaProcessRunning": "Se está ejecutando un proceso. Cancélelo antes de cerrar Fluenta.",
+    "projectNotFound": "Proyecto no encontrado",
+    "languageNotFound": "Idioma '{0}' no encontrado",
+    "windowNotFound": "Ventana no encontrada",
+    "memoryNotFound": "Memoria no encontrada"
   },
   "addConfigurationDialog": {
     "enterRootName": "Introduzca el nombre del elemento raiz",

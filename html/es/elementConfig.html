@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <title id="title">Configuraci&oacute;n de Elemento</title>
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body class="dialogBody" onload="new ElementConfig();">
+<body class="dialogBody">
     <table>
         <tr>
             <td class="middle noWrap">
@@ -55,7 +55,11 @@
     <div class="buttonArea">
         <button id="save">Guardar Configuraci&oacute;n de Elemento</button>
     </div>
-    <script src="../../js/elementConfig.js"></script>
+    
+    <script>
+        const { ElementConfig } = require('../../js/elementConfig.js');
+        new ElementConfig();
+    </script>
 </body>
 
 </html>

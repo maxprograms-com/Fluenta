@@ -15,7 +15,7 @@ Fluenta is available in two modes:
 
 ### Source Code
 
-Source code of Fluenta is free. Anyone can download the source code, compile, modify and use it at no cost in compliance with the accompanying license terms.
+Anyone can download the source code, compile, modify and use it at no cost in compliance with the accompanying license terms. See [licenses](licenses/README.md) directory.
 
 You can subscribe to [Maxprograms Support](https://groups.io/g/maxprograms/) at Groups.io and request peer assistance for the source code version there.
 
@@ -50,20 +50,20 @@ Ready to use installers are available at [https://www.maxprograms.com/products/f
 You need these tools to build Fluenta:
 
 - Java 21 LTS, get it from [https://adoptium.net/](https://adoptium.net/)
-- Apache Ant 1.10.14, get it from [https://ant.apache.org](https://ant.apache.org)
-- NodeJS 22.12.0 LTS, get it it from [https://nodejs.org/](https://nodejs.org/)
+- Gradle 9.2, get it from [https://gradle.org/](https://gradle.org/)
+- NodeJS 24.14.0 LTS, get it it from [https://nodejs.org/](https://nodejs.org/)
 
 ### Building Fluenta
 
 - Checkout this repository
 - Point your `JAVA_HOME` variable to JDK 21
-- Run `ant` to compile the Java code
+- Run `gradle` to compile the Java code
 - Install the NodeJS dependencies with `npm install`
 
 ```shell
 git clone https://github.com/rmraya/Fluenta.git
 cd Fluenta
-ant
+gradle
 npm install
 ```
 
@@ -74,3 +74,7 @@ After building the code, you can launch fluenta with the following command:
 ```shell
 npm start
 ```
+
+## Legal
+
+License information for all included components is available in the [licenses](licenses/README.md) directory.

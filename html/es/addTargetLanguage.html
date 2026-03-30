@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <title>A&ntilde;adir Idioma Destino</title>
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body class="dialogBody" onload="new AddTargetLanguage();">
+<body class="dialogBody">
     <table>
         <tr>
             <td class="middle"><label for="tgtLangSelect">Idioma Destino</label></td>
@@ -18,7 +18,11 @@
         <div class="filler">&nbsp;</div>
         <button id="addTargetLanguage">A&ntilde;adir Idioma Destino</button>
     </div>
-    <script src="../../js/addTargetLanguage.js"></script>
+    
+    <script>
+        const { AddTargetLanguage } = require('../../js/addTargetLanguage.js');
+        new AddTargetLanguage();
+    </script>
 </body>
 
 </html>

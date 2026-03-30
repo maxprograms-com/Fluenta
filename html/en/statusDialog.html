@@ -6,11 +6,11 @@
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body onload="new StatusDialog();">
+<body>
     <table>
         <tr>
             <td style="padding: 4px 8px;">Project:</td>
-            <td  style="padding: 4px 8px;" id="projectDescription"></td>
+            <td style="padding: 4px 8px;" id="projectDescription"></td>
         </tr>
     </table>
 
@@ -63,7 +63,10 @@
         </div>
     </div>
 
-    <script src="../../js/statusDialog.js"></script>
+    <script>
+        const { StatusDialog } = require('../../js/statusDialog.js');
+        new StatusDialog();
+    </script>
 </body>
 
 </html>

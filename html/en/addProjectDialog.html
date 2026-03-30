@@ -6,7 +6,7 @@
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body class="dialogBody" onload="new AddProjectDialog();">
+<body class="dialogBody">
     <table>
         <tr>
             <td class="middle">
@@ -54,7 +54,11 @@
         <button id="addButton">Add Project</button>
     </div>
 
-    <script src="../../js/addProjectDialog.js"></script>
+    
+    <script>
+        const { AddProjectDialog } = require('../../js/addProjectDialog.js');
+        new AddProjectDialog();
+    </script>
 </body>
 
 </html>

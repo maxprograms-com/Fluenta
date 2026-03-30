@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -64,9 +64,14 @@ public class Preferences {
 			json.put("projectsFolder", projectsFolder.getAbsolutePath());
 			json.put("memoriesFolder", memoriesFolder.getAbsolutePath());
 			json.put("srxFile", srxFile.getAbsolutePath());
+			json.put("maxThreads", Runtime.getRuntime().availableProcessors());
 			savePreferences();
 		}
 		json = FileUtils.readJSON(preferencesFile);
+		if (!json.has("maxThreads")) {
+			json.put("maxThreads", Runtime.getRuntime().availableProcessors());
+			savePreferences();
+		}
 	}
 
 	private void savePreferences() throws IOException {
@@ -186,5 +191,9 @@ public class Preferences {
 
 	public void setApplicationLanguage(String language) throws IOException {
 		save("application", "language", language);
+	}
+
+	public int getMaxThreads() {
+		return json.getInt("maxThreads");
 	}
 }

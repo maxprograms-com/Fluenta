@@ -6,7 +6,7 @@
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body onload="new SettingsDialog();">
+<body>
     <div class="tabHolder">
         <a id="generalButton" class="tab selectedTab"><span>General Options</span></a>
         <a id="xmlButton" class="tab"><span>XML Options</span></a>
@@ -55,6 +55,10 @@
                 <td class="middle marginRight"><button id="browseSrxButton">Browse...</button>
                 </td>
             </tr>
+            <tr>
+                <td class="middle"><label for="maxThreads">Max Threads</label></td>
+                <td class="middle"><input type="number" id="maxThreads" style="width: 40px;" ></td>
+            </tr>
         </table>
         <table class="fill_width">
             <tr>
@@ -96,7 +100,8 @@
         </table>
         <div class="separator">&nbsp;</div>
         <div class="divContainer bordered" style="height:180px; width:calc(100% - 20px); margin-left: 8px;">
-            <table class="dialogTable  stripes" >
+            <table class="dialogTable  stripes">
+
                 <head>
                     <tr>
                         <th colspan="2">Configuration Files</th>
@@ -116,6 +121,7 @@
         <div class="separator">&nbsp;</div>
         <div class="divContainer bordered" style="height:180px; width:calc(100% - 20px); margin-left: 8px;">
             <table class="dialogTable  stripes">
+
                 <head>
                     <tr>
                         <th colspan="2">XML Catalog</th>
@@ -138,7 +144,10 @@
         <button id="saveButton">Save Settings</button>
     </div>
 
-    <script src="../../js/settingsDialog.js"></script>
+    <script>
+        const { SettingsDialog } = require('../../js/settingsDialog.js');
+        new SettingsDialog();
+    </script>
 </body>
 
 </html>

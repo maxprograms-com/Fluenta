@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,30 +10,32 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-class FilterConfig {
+import { ipcRenderer } from 'electron';
+import {ElementConfiguration} from "./element.js";
 
-    electron = require('electron');
-    selected: Map<string, any>;
-    filterName: string;
+export class FilterConfig {
+
+    selected: Map<string, any> = new Map<string, any>();
+    filterName: string = '';
 
     constructor() {
-        this.electron.ipcRenderer.send('get-theme');
-        this.electron.ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
+        ipcRenderer.send('get-theme');
+        ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
             (document.getElementById('theme') as HTMLLinkElement).href = theme;
         });
         document.addEventListener('keydown', (event: KeyboardEvent) => {
             if (event.code === 'Escape') {
-                this.electron.ipcRenderer.send('close-filterConfig');
+                ipcRenderer.send('close-filterConfig');
             }
         });
-        this.electron.ipcRenderer.on('set-filterData', (event: Electron.IpcRendererEvent, arg: any) => {
+        ipcRenderer.on('set-filterData', (event: Electron.IpcRendererEvent, arg: any) => {
             this.populateTable(arg);
         });
-        document.getElementById('add').addEventListener('click', () => { this.addElement(); });
-        document.getElementById('edit').addEventListener('click', () => { this.editElement(); });
-        document.getElementById('remove').addEventListener('click', () => { this.removeElements(); });
+        document.getElementById('add')?.addEventListener('click', () => { this.addElement(); });
+        document.getElementById('edit')?.addEventListener('click', () => { this.editElement(); });
+        document.getElementById('remove')?.addEventListener('click', () => { this.removeElements(); });
         setTimeout(() => {
-            this.electron.ipcRenderer.send('set-height', { window: 'filterConfig', width: document.body.clientWidth, height: document.body.clientHeight });
+            ipcRenderer.send('set-height', { window: 'filterConfig', width: document.body.clientWidth, height: document.body.clientHeight });
         }, 200);
     }
 
@@ -93,22 +95,22 @@ class FilterConfig {
 
     addElement(): void {
         let empty: ElementConfiguration = { filter: this.filterName, name: '', type: 'segment', inline: '', attributes: '', keepSpace: '' };
-        this.electron.ipcRenderer.send('add-element', empty);
+        ipcRenderer.send('add-element', empty);
     }
 
     editElement(): void {
         if (this.selected.size === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'filterConfigurationDialog', key: 'selectElement' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'filterConfigurationDialog', key: 'selectElement' });
             return;
         }
         if (this.selected.size !== 1) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'filterConfigurationDialog', key: 'selectOneElement' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'filterConfigurationDialog', key: 'selectOneElement' });
             return;
         }
         let it: IterableIterator<[string, any]> = this.selected.entries();
         let first: IteratorResult<[string, any]> = it.next();
         let element: any = this.selected.get(first.value[0]);
-        this.electron.ipcRenderer.send('add-element', {
+        ipcRenderer.send('add-element', {
             filter: this.filterName,
             name: element.content,
             type: this.getAttribute(element.attributes, 'hard-break', 'segment'),
@@ -120,14 +122,14 @@ class FilterConfig {
 
     removeElements(): void {
         if (this.selected.size === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'filterConfigurationDialog', key: 'selectElement' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'filterConfigurationDialog', key: 'selectElement' });
             return;
         }
         let elements: string[] = [];
         this.selected.forEach((value: any, key: string) => {
             elements.push(key);
         });
-        this.electron.ipcRenderer.send('remove-elements', { filter: this.filterName, elements: elements });
+        ipcRenderer.send('remove-elements', { filter: this.filterName, elements: elements });
     }
 
     getAttribute(attributes: string[][], name: string, defaultValue: string): string {

@@ -6,7 +6,7 @@
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body class="dialogBody" onload="new AddConfigurationFile();">
+<body class="dialogBody">
     <table class="fill_width">
         <tr>
             <td class="middle"><label for="rootName" class="noWrap">Nombre del Elemento Raiz:</label></td>
@@ -16,7 +16,11 @@
     <div class="buttonArea">
         <button id="add">A&ntilde;adir Archivo de Configuraci&oacute;n</button>
     </div>
-    <script src="../../js/addConfigurationFile.js"></script>
+    
+    <script>
+        const { AddConfigurationFile } = require('../../js/addConfigurationFile.js');
+        new AddConfigurationFile();
+    </script>
 </body>
 
 </html>

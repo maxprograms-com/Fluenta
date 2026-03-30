@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,30 +10,32 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-class ElementConfig {
+import { ElementConfiguration } from "./element.js";
+import { ipcRenderer } from 'electron';
 
-    electron = require('electron');
-    elementConfig: ElementConfiguration;
+export class ElementConfig {
+
+    elementConfig: ElementConfiguration = { filter: '', name: '', type: '', inline: '', attributes: '', keepSpace: '' };
 
     constructor() {
-        this.electron.ipcRenderer.send('get-theme');
-        this.electron.ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
+        ipcRenderer.send('get-theme');
+        ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
             (document.getElementById('theme') as HTMLLinkElement).href = theme;
         });
         document.addEventListener('keydown', (event: KeyboardEvent) => {
             if (event.code === 'Escape') {
-                this.electron.ipcRenderer.send('close-elementConfig');
+                ipcRenderer.send('close-elementConfig');
             }
             if (event.code === 'Enter' || event.code === 'NumpadEnter') {
                 this.saveElement();
             }
         });
-        document.getElementById('save').addEventListener('click', () => { this.saveElement(); });
-        this.electron.ipcRenderer.on('set-elementConfig', (event: Electron.IpcRendererEvent, arg: ElementConfiguration) => {
+        document.getElementById('save')?.addEventListener('click', () => { this.saveElement(); });
+        ipcRenderer.on('set-elementConfig', (event: Electron.IpcRendererEvent, arg: ElementConfiguration) => {
             this.setValues(arg);
         })
         setTimeout(() => {
-            this.electron.ipcRenderer.send('set-height', { window: 'elementConfig', width: document.body.clientWidth, height: document.body.clientHeight });
+            ipcRenderer.send('set-height', { window: 'elementConfig', width: document.body.clientWidth, height: document.body.clientHeight });
         }, 200);
     }
 
@@ -44,7 +46,7 @@ class ElementConfig {
         (document.getElementById('inline') as HTMLSelectElement).value = arg.inline;
         (document.getElementById('attributes') as HTMLInputElement).value = arg.attributes;
         (document.getElementById('keep') as HTMLInputElement).checked = arg.keepSpace === 'yes';
-        document.getElementById('type').addEventListener('change', (event) => {
+        document.getElementById('type')?.addEventListener('change', (event) => {
             let value: string = (event.target as HTMLInputElement).value;
             let inline: HTMLSelectElement = document.getElementById('inline') as HTMLSelectElement;
             inline.disabled = value !== 'inline';
@@ -61,7 +63,7 @@ class ElementConfig {
     saveElement(): void {
         let name: string = (document.getElementById('name') as HTMLInputElement).value;
         if (name === '') {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'elementConfigurationDialog', key: 'enterName' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'elementConfigurationDialog', key: 'enterName' });
             return;
         }
         this.elementConfig.name = name;
@@ -70,9 +72,9 @@ class ElementConfig {
         this.elementConfig.attributes = (document.getElementById('attributes') as HTMLInputElement).value;
         this.elementConfig.keepSpace = (document.getElementById('keep') as HTMLInputElement).checked ? 'yes' : '';
         if (this.elementConfig.type === 'inline' && this.elementConfig.inline === '') {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'elementConfigurationDialog', key: 'selectInlineType' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'elementConfigurationDialog', key: 'selectInlineType' });
             return;
         }
-        this.electron.ipcRenderer.send('save-elementConfig', this.elementConfig);
+        ipcRenderer.send('save-elementConfig', this.elementConfig);
     }
 }

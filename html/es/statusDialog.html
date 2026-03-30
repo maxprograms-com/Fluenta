@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <title id="version">Estado del Proyecto</title>
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body onload="new StatusDialog();">
+<body>
     <table>
         <tr>
             <td style="padding: 4px 8px;">Proyecto:</td>
@@ -58,7 +58,10 @@
         </div>
     </div>
 
-    <script src="../../js/statusDialog.js"></script>
+    <script>
+        const { StatusDialog } = require('../../js/statusDialog.js');
+        new StatusDialog();
+    </script>
 </body>
 
 </html>

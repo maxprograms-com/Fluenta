@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <title>A&ntilde;adir Proyecto</title>
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body class="dialogBody" onload="new AddProjectDialog();">
+<body class="dialogBody">
     <table>
         <tr>
             <td class="middle">
@@ -53,7 +53,10 @@
         <button id="selectMemories">Memorias del Proyecto</button> <button id="addButton">A&ntilde;adir Proyecto</button>
     </div>
 
-    <script src="../../js/addProjectDialog.js"></script>
+    <script>
+        const { AddProjectDialog } = require('../../js/addProjectDialog.js');
+        new AddProjectDialog();
+    </script>
 </body>
 
 </html>

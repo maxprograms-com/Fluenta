@@ -1,12 +1,12 @@
 <!Doctype html>
-<html>
+<html lang="en">
 
 <head>
     <title>Licenses</title>
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body class="dialogBody" onload="new Licenses();">
+<body class="dialogBody">
     <table class="textTable">
         <tr class="noWrap">
             <td>Fluenta</td>
@@ -30,11 +30,11 @@
         </tr>
         <tr class="noWrap">
             <td>XMLJava</td>
-            <td><a id="XMLJava">Eclipse Public License 1.0</a></td>
+            <td><a id="XMLJava">Custom License</a></td>
         </tr>
         <tr class="noWrap">
             <td>BCP47J</td>
-            <td><a id="BCP47J">Eclipse Public License 1.0</a></td>
+            <td><a id="BCP47J">Custom License</a></td>
         </tr>
         <tr class="noWrap">
             <td>TypesBCP47</td>
@@ -56,12 +56,12 @@
             <td>jsoup</td>
             <td><a id="jsoup">MIT License</a></td>
         </tr>
-        <tr class="noWrap">
-            <td>DTDParser</td>
-            <td><a id="DTDParser">LGPL 2.1</a></td>
-        </tr>
     </table>
-    <script src="../../js/licenses.js"></script>
+    
+    <script>
+        const { Licenses } = require('../../js/licenses.js');
+        new Licenses();
+    </script>
 </body>
 
 </html>

@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <title id="version">Configuraci&oacute;n</title>
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body onload="new SettingsDialog();">
+<body>
     <div class="tabHolder">
-        <a id="generalButton" class="tab selectedTab"><span>Opciones Generales</span></a> <a id="xmlButton" class="tab"><span>Opciones XML</span></a>
+        <a id="generalButton" class="tab selectedTab"><span>Opciones Generales</span></a> 
+        <a id="xmlButton" class="tab"><span>Opciones XML</span></a>
         <a id="fillerTab" class="tab fill_width"><span>&nbsp;</span></a>
     </div>
 
@@ -49,6 +50,10 @@
                 <td class="fill_width middle"><input id="srxFile" class="fill_width"></td>
                 <td class="middle marginRight"><button id="browseSrxButton">Examinar...</button>
                 </td>
+            </tr>
+            <tr>
+                <td class="middle"><label for="maxThreads">Máximo de hilos</label></td>
+                <td class="middle"><input type="number" id="maxThreads" style="width: 40px;" ></td>
             </tr>
         </table>
         <table class="fill_width">
@@ -130,7 +135,10 @@
         <button id="saveButton">Guardar Configuraci&oacute;n</button>
     </div>
 
-    <script src="../../js/settingsDialog.js"></script>
+    <script>
+        const { SettingsDialog } = require('../../js/settingsDialog.js');
+        new SettingsDialog();
+    </script>
 </body>
 
 </html>

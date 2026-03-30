@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,32 +10,32 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-class AboutDialog {
+import { ipcRenderer } from 'electron';
 
-    electron = require('electron');
+export class AboutDialog {
 
     constructor() {
-        this.electron.ipcRenderer.send('get-theme');
-        this.electron.ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
+        ipcRenderer.send('get-theme');
+        ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
             (document.getElementById('theme') as HTMLLinkElement).href = theme;
         });
         document.addEventListener('keydown', (event: KeyboardEvent) => {
             if (event.code === 'Escape') {
-                this.electron.ipcRenderer.send('close-aboutDialog');
+                ipcRenderer.send('close-aboutDialog');
             }
         });
-        this.electron.ipcRenderer.send('get-version');
-        this.electron.ipcRenderer.on('set-version', (event: Electron.IpcRendererEvent, arg: string) => {
-            document.getElementById('version').textContent = arg;
+        ipcRenderer.send('get-version');
+        ipcRenderer.on('set-version', (event: Electron.IpcRendererEvent, version: string) => {
+            (document.getElementById('version') as HTMLTitleElement).textContent = version;
         });
-        document.getElementById('systemInfo').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('show-system');
+        document.getElementById('systemInfo')?.addEventListener('click', () => {
+            ipcRenderer.send('show-system');
         });
-        document.getElementById('licenses').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('show-licenses', 'aboutDialog');
+        document.getElementById('licenses')?.addEventListener('click', () => {
+            ipcRenderer.send('show-licenses', 'aboutDialog');
         });
         setTimeout(() => {
-            this.electron.ipcRenderer.send('set-height', { window: 'aboutDialog', width: document.body.clientWidth, height: document.body.clientHeight });
+            ipcRenderer.send('set-height', { window: 'aboutDialog', width: document.body.clientWidth, height: document.body.clientHeight });
         }, 500);
     }
 }

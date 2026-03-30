@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <title>Importar XLIFF</title>
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body class="dialogBody" onload="new ImportXliffDialog();">
+<body class="dialogBody">
     <table>
         <tr>
             <td style="padding-left: 4px; padding-right: 4px;">Proyecto</td>
@@ -67,7 +67,11 @@
         <div class="filler">&nbsp;</div>
         <button id="importXliff">Importar XLIFF</button>
     </div>
-    <script src="../../js/importXliffDialog.js"></script>
+    
+    <script>
+        const { ImportXliffDialog } = require('../../js/importXliffDialog.js');
+        new ImportXliffDialog();
+    </script>
 </body>
 
 </html>

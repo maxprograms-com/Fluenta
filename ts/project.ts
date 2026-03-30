@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,14 +10,14 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-interface StatusEvent {
+export interface StatusEvent {
     date: string;
     build: number;
     language: string;
     type: string;
 }
 
-interface Project {
+export interface Project {
 
     id: number;
     title: string;

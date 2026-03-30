@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,7 +10,7 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-interface Preferences {
+export interface Preferences {
 
     defaultTheme: string;
     lang: string;
@@ -20,4 +20,5 @@ interface Preferences {
     memoriesFolder: string;
     srxFile: string;
     translateComments: boolean;
+    maxThreads: number;
 }

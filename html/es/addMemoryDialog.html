@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <title>A&ntilde;adir Memoria</title>
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body class="dialogBody" onload="new AddMemoryDialog();">
+<body class="dialogBody">
     <table>
         <tr>
             <td class="middle"><label for="nameInput">Nombre de Memoria</label></td>
@@ -26,7 +26,11 @@
         <div class="filler">&nbsp;</div>
         <button id="addMemory">A&ntilde;adir Memoria</button>
     </div>
-    <script src="../../js/addMemoryDialog.js"></script>
+    
+    <script>
+        const { AddMemoryDialog } = require('../../js/addMemoryDialog.js');
+        new AddMemoryDialog();
+    </script>
 </body>
 
 </html>

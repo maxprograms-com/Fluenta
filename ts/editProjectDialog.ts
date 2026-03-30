@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,51 +10,53 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-class EditProjectDialog {
+import { ipcRenderer } from 'electron';
+import { LanguageInterface } from "./languages.js";
+import { Project, StatusEvent } from "./project.js";
 
-    electron = require('electron');
+export class EditProjectDialog {
 
     tgtLangs: LanguageInterface[] = [];
     memories: number[] = [];
-    project: Project;
+    project: Project = {} as Project;
     removeText: string = '';
-    
+
     constructor() {
-        this.electron.ipcRenderer.send('get-theme');
-        this.electron.ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
+        ipcRenderer.send('get-theme');
+        ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
             (document.getElementById('theme') as HTMLLinkElement).href = theme;
-            this.electron.ipcRenderer.send('get-languages');
+            ipcRenderer.send('get-languages');
         });
-        this.electron.ipcRenderer.on('set-languages', (event: Electron.IpcRendererEvent, languages: LanguageInterface[]) => {
+        ipcRenderer.on('set-languages', (event: Electron.IpcRendererEvent, languages: LanguageInterface[]) => {
             this.setLanguages(languages);
             setTimeout(() => {
-                this.electron.ipcRenderer.send('set-height', { window: 'editProjectDialog', width: document.body.clientWidth, height: document.body.clientHeight });
+                ipcRenderer.send('set-height', { window: 'editProjectDialog', width: document.body.clientWidth, height: document.body.clientHeight });
             }, 300);
         });
-        this.electron.ipcRenderer.on('set-project', (event: Electron.IpcRendererEvent, project: Project) => {
+        ipcRenderer.on('set-project', (event: Electron.IpcRendererEvent, project: Project) => {
             this.setProject(project);
         });
         document.addEventListener('keydown', (event: KeyboardEvent) => {
             if (event.code === 'Escape') {
-                this.electron.ipcRenderer.send('close-projectDialog');
+                ipcRenderer.send('close-projectDialog');
             }
             if (event.code === 'Enter') {
                 this.updateProject();
             }
         });
-        document.getElementById('browseButton').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('get-ditamap');
+        document.getElementById('browseButton')?.addEventListener('click', () => {
+            ipcRenderer.send('get-ditamap');
         });
-        this.electron.ipcRenderer.on('set-ditamap', (event: Electron.IpcRendererEvent, file: string) => {
+        ipcRenderer.on('set-ditamap', (event: Electron.IpcRendererEvent, file: string) => {
             (document.getElementById('ditaMap') as HTMLInputElement).value = file;
         });
-        document.getElementById('addTarget').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('add-target-language', 'editProjectDialog');
+        document.getElementById('addTarget')?.addEventListener('click', () => {
+            ipcRenderer.send('add-target-language', 'editProjectDialog');
         });
-        document.getElementById('updateButton').addEventListener('click', () => {
+        document.getElementById('updateButton')?.addEventListener('click', () => {
             this.updateProject();
         });
-        this.electron.ipcRenderer.on('add-language', (event: Electron.IpcRendererEvent, arg: LanguageInterface) => {
+        ipcRenderer.on('add-language', (event: Electron.IpcRendererEvent, arg: LanguageInterface) => {
             let filtered: LanguageInterface[] = this.tgtLangs.filter((lang: LanguageInterface) => {
                 return lang.code === arg.code;
             });
@@ -63,20 +65,20 @@ class EditProjectDialog {
                 this.displayTargetLanguages();
             }
         });
-        this.electron.ipcRenderer.on('set-project-languages', (event: Electron.IpcRendererEvent, arg: { srcLang: LanguageInterface, tgtLangs: LanguageInterface[], removeText: string  }) => {
+        ipcRenderer.on('set-project-languages', (event: Electron.IpcRendererEvent, arg: { srcLang: LanguageInterface, tgtLangs: LanguageInterface[], removeText: string }) => {
             this.tgtLangs = arg.tgtLangs;
             this.removeText = arg.removeText;
             (document.getElementById('srcLangSelect') as HTMLSelectElement).value = arg.srcLang.code;
             this.displayTargetLanguages();
         });
-        document.getElementById('selectMemories').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('select-memories', { dialog: 'editProjectDialog', memories: this.memories });
+        document.getElementById('selectMemories')?.addEventListener('click', () => {
+            ipcRenderer.send('select-memories', { dialog: 'editProjectDialog', memories: this.memories });
         });
 
-        this.electron.ipcRenderer.on('set-memories', (event: Electron.IpcRendererEvent, memories: number[]) => {
+        ipcRenderer.on('set-memories', (event: Electron.IpcRendererEvent, memories: number[]) => {
             this.memories = memories;
         });
-        document.getElementById('ditaMap').focus();
+        document.getElementById('ditaMap')?.focus();
     }
 
     removeTargetLanguages(language: string): void {
@@ -141,22 +143,22 @@ class EditProjectDialog {
         (document.getElementById('nameInput') as HTMLInputElement).value = project.title;
         (document.getElementById('descriptionInput') as HTMLTextAreaElement).value = project.description;
         (document.getElementById('srcLangSelect') as HTMLSelectElement).value = project.srcLanguage;
-        this.electron.ipcRenderer.send('get-project-languages', this.project.id);
+        ipcRenderer.send('get-project-languages', this.project.id);
     }
 
     updateProject(): void {
         let map: string = (document.getElementById('ditaMap') as HTMLInputElement).value;
         if (map === '') {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectDialog', key: 'selectDitamap' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectDialog', key: 'selectDitamap' });
             return;
         }
         let title: string = (document.getElementById('nameInput') as HTMLInputElement).value;
         if (title === '') {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectDialog', key: 'enterName' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectDialog', key: 'enterName' });
             return;
         }
         if (this.tgtLangs.length === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectDialog', key: 'addTargetLanguage' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectDialog', key: 'addTargetLanguage' });
             return;
         }
         this.project.title = title;
@@ -192,6 +194,6 @@ class EditProjectDialog {
             }
         }
         this.project.languageStatus = newLanguageStatus;
-        this.electron.ipcRenderer.send('update-project', this.project);
+        ipcRenderer.send('update-project', this.project);
     }
 }

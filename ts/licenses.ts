@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,56 +10,56 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-class Licenses {
+import {ipcRenderer} from 'electron';
 
-    electron = require('electron');
+export class Licenses {
 
     constructor() {
-        this.electron.ipcRenderer.send('get-theme');
-        this.electron.ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
+        ipcRenderer.send('get-theme');
+        ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
             (document.getElementById('theme') as HTMLLinkElement).href = theme;
         });
         document.addEventListener('keydown', (event: KeyboardEvent) => {
             if (event.code === 'Escape') {
-                this.electron.ipcRenderer.send('close-licensesDialog');
+                ipcRenderer.send('close-licensesDialog');
             }
         });
-        document.getElementById('Fluenta').addEventListener('click', () => {
+        document.getElementById('Fluenta')?.addEventListener('click', () => {
             this.openLicense('Fluenta');
         });
-        document.getElementById('electron').addEventListener('click', () => {
+        document.getElementById('electron')?.addEventListener('click', () => {
             this.openLicense('electron');
         });
-        document.getElementById('Swordfish').addEventListener('click', () => {
+        document.getElementById('Swordfish')?.addEventListener('click', () => {
             this.openLicense('Swordfish');
         });
-        document.getElementById('Java').addEventListener('click', () => {
+        document.getElementById('Java')?.addEventListener('click', () => {
             this.openLicense('Java');
         });
-        document.getElementById('OpenXLIFF').addEventListener('click', () => {
+        document.getElementById('OpenXLIFF')?.addEventListener('click', () => {
             this.openLicense('OpenXLIFF');
         });
-        document.getElementById('XMLJava').addEventListener('click', () => {
+        document.getElementById('XMLJava')?.addEventListener('click', () => {
             this.openLicense('XMLJava');
         });
-        document.getElementById('BCP47J').addEventListener('click', () => {
+        document.getElementById('BCP47J')?.addEventListener('click', () => {
             this.openLicense('BCP47J');
         });
-        document.getElementById('typesbcp47').addEventListener('click', () => {
+        document.getElementById('typesbcp47')?.addEventListener('click', () => {
             this.openLicense('TypesBCP47');
         });
-        document.getElementById('MapDB').addEventListener('click', () => {
+        document.getElementById('MapDB')?.addEventListener('click', () => {
             this.openLicense('MapDB');
         });
-        document.getElementById('jsoup').addEventListener('click', () => {
+        document.getElementById('jsoup')?.addEventListener('click', () => {
             this.openLicense('jsoup');
         });
         setTimeout(() => {
-            this.electron.ipcRenderer.send('set-height', { window: 'licenses', width: document.body.clientWidth, height: document.body.clientHeight });
+            ipcRenderer.send('set-height', { window: 'licenses', width: document.body.clientWidth, height: document.body.clientHeight });
         }, 300);
     }
 
     openLicense(type: string) {
-        this.electron.ipcRenderer.send('open-license', type);
+        ipcRenderer.send('open-license', type);
     }
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -33,6 +33,7 @@ import com.maxprograms.fluenta.models.Project;
 import com.maxprograms.languages.Language;
 import com.maxprograms.languages.LanguageUtils;
 import com.maxprograms.utils.FileUtils;
+import com.maxprograms.utils.Preferences;
 import com.maxprograms.utils.SimpleLogger;
 
 public class API {
@@ -63,7 +64,8 @@ public class API {
 
 	private static void generateXLIFF(long id, String xliffFolder, String[] tgtLang, boolean useICE, boolean useTM,
 			boolean generateCount, boolean verbose, String ditaval, String version, boolean embedSkeleton,
-			boolean modifiedFilesOnly, boolean ignoreTrackedChanges, boolean ignoreSVG, boolean paragraphSegmentation)
+			boolean modifiedFilesOnly, boolean ignoreTrackedChanges, boolean ignoreSVG, boolean paragraphSegmentation,
+			int maxThreads)
 			throws IOException, SAXException, ParserConfigurationException, URISyntaxException, SQLException,
 			JSONException, ParseException {
 		LocalController controller = new LocalController();
@@ -84,7 +86,8 @@ public class API {
 		}
 		SimpleLogger logger = new SimpleLogger(verbose);
 		controller.generateXliff(project, xliffFolder, langs, useICE, useTM, generateCount, ditaval, version,
-				embedSkeleton, modifiedFilesOnly, ignoreTrackedChanges, ignoreSVG, paragraphSegmentation, logger);
+				embedSkeleton, modifiedFilesOnly, ignoreTrackedChanges, ignoreSVG, paragraphSegmentation, maxThreads,
+				logger);
 		controller.updateProject(project);
 	}
 
@@ -132,6 +135,10 @@ public class API {
 		if (jsonObject.has("ignoreSVG")) {
 			ignoreSVG = jsonObject.getBoolean("ignoreSVG");
 		}
+		int maxThreads = Preferences.getInstance().getMaxThreads();
+		if (jsonObject.has("maxThreads")) {
+			maxThreads = jsonObject.getInt("maxThreads");
+		}
 		JSONArray tgtArray = jsonObject.getJSONArray("tgtLang");
 		String[] tgtLang = new String[tgtArray.length()];
 		for (int i = 0; i < tgtArray.length(); i++) {
@@ -139,11 +146,11 @@ public class API {
 		}
 
 		generateXLIFF(id, xliffFolder, tgtLang, useICE, useTM, generateCount, verbose, ditaval, version,
-				embedSkeleton, modifiedFilesOnly, ignoreTrackedChanges, ignoreSVG, paragraphSegmentation);
+				embedSkeleton, modifiedFilesOnly, ignoreTrackedChanges, ignoreSVG, paragraphSegmentation, maxThreads);
 	}
 
 	private static void importXLIFF(long id, String xliffFile, String outputFolder, boolean updateTM,
-			boolean acceptUnapproved, boolean ignoreTagErrors, boolean verbose)
+			boolean acceptUnapproved, boolean ignoreTagErrors, boolean verbose, int maxThreads)
 			throws IOException, NumberFormatException, SAXException, ParserConfigurationException, SQLException,
 			URISyntaxException, JSONException, ParseException {
 		LocalController controller = new LocalController();
@@ -157,7 +164,7 @@ public class API {
 		}
 		SimpleLogger logger = new SimpleLogger(verbose);
 		controller.importXliff(project, xliffFile, outputFolder, updateTM, acceptUnapproved, ignoreTagErrors,
-				logger);
+				maxThreads, logger);
 	}
 
 	protected static void importXLIFF(String jsonFile, boolean verbose) throws IOException, NumberFormatException,
@@ -177,6 +184,10 @@ public class API {
 		if (jsonObject.has("ignoreTagErrors")) {
 			ignoreTagErrors = jsonObject.getBoolean("ignoreTagErrors");
 		}
-		importXLIFF(id, xliffFile, outputFolder, updateTM, acceptUnapproved, ignoreTagErrors, verbose);
+		int maxThreads = Preferences.getInstance().getMaxThreads();
+		if (jsonObject.has("maxThreads")) {
+			maxThreads = jsonObject.getInt("maxThreads");
+		}
+		importXLIFF(id, xliffFile, outputFolder, updateTM, acceptUnapproved, ignoreTagErrors, verbose, maxThreads);
 	}
 }

@@ -1,12 +1,12 @@
 <!Doctype html>
-<html>
+<html lang="en">
 
 <head>
     <title>Add Configuration File</title>
     <link id="theme" rel="stylesheet" type="text/css" href="../../css/light.css">
 </head>
 
-<body class="dialogBody" onload="new AddConfigurationFile();">
+<body class="dialogBody">
     <table class="fill_width">
         <tr>
             <td class="middle"><label for="rootName" class="noWrap">Root Element Name:</label></td>
@@ -16,7 +16,11 @@
     <div class="buttonArea">
         <button id="add">Add Configuration File</button>
     </div>
-    <script src="../../js/addConfigurationFile.js"></script>
+    
+    <script>
+        const { AddConfigurationFile } = require('../../js/addConfigurationFile.js');
+        new AddConfigurationFile();
+    </script>
 </body>
 
 </html>

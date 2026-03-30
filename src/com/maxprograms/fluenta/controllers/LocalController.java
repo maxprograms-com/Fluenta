@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -22,6 +22,7 @@ import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
@@ -30,6 +31,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -162,7 +168,7 @@ public class LocalController {
 	public void generateXliff(Project project, String xliffFolder, List<Language> tgtLangs, boolean useICE,
 			boolean useTM, boolean generateCount, String ditavalFile, String version, boolean embedSkeleton,
 			boolean modifiedFilesOnly, boolean ignoreTrackedChanges, boolean ignoreSVG, boolean paragraphSegmentation,
-			ILogger logger)
+			int maxThreads, ILogger logger)
 			throws IOException, SAXException, ParserConfigurationException, URISyntaxException, SQLException,
 			JSONException, ParseException {
 		Map<String, String> params = new Hashtable<>();
@@ -201,6 +207,7 @@ public class LocalController {
 		params.put("ignoresvg", ignoreSVG ? "yes" : "no");
 		params.put("paragraph", paragraphSegmentation ? "yes" : "no");
 		params.put("embed", embedSkeleton ? "yes" : "no");
+		params.put("maxThreads", String.valueOf(maxThreads));
 
 		logger.setStage(Messages.getString("LocalController.0"));
 
@@ -212,26 +219,31 @@ public class LocalController {
 		logger.setStage(Messages.getString("LocalController.1"));
 		MessageFormat mf = new MessageFormat(Messages.getString("LocalController.2"));
 		for (int i = 0; i < tgtLangs.size(); i++) {
-			logger.log(
-					mf.format(new String[] {
-							LanguageUtils.getLanguage(tgtLangs.get(i).getCode()).getDescription() }));
-			String newName = getName(map.getName(), tgtLangs.get(i).getCode());
+			String langCode = tgtLangs.get(i).getCode();
+			if (langCode.isBlank()) {
+				continue;
+			}
+			Language lang = LanguageUtils.getLanguage(langCode);
+			logger.log(mf.format(new String[] { lang.getDescription() }));
+			String newName = getName(map.getName(), langCode);
 			File newFile = new File(folder, newName);
 			Files.copy(xliffFile.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			changeTargetLanguage(newFile, tgtLangs.get(i).getCode(), project);
-			int build = project.getNextBuild(tgtLangs.get(i).getCode());
-			project.getHistory()
-					.add(new ProjectEvent(ProjectEvent.XLIFF_CREATED, new Date(), tgtLangs.get(i).getCode(),
-							build));
-			project.setLanguageStatus(tgtLangs.get(i).getCode(), Project.IN_PROGRESS);
+			changeTargetLanguage(newFile, langCode, project);
+			int build = project.getNextBuild(langCode);
+			project.getHistory().add(new ProjectEvent(ProjectEvent.XLIFF_CREATED, new Date(), langCode, build));
+			project.setLanguageStatus(langCode, Project.IN_PROGRESS);
 			updateProject(project);
 		}
 		Files.deleteIfExists(xliffFile.toPath());
 		if (useICE) {
 			MessageFormat icem = new MessageFormat(Messages.getString("LocalController.3"));
 			for (int i = 0; i < tgtLangs.size(); i++) {
-				logger.setStage(icem.format(
-						new String[] { LanguageUtils.getLanguage(tgtLangs.get(i).getCode()).getDescription() }));
+				String langCode = tgtLangs.get(i).getCode();
+				if (langCode.isBlank()) {
+					continue;
+				}
+				Language lang = LanguageUtils.getLanguage(langCode);
+				logger.setStage(icem.format(new String[] { lang.getDescription() }));
 				logger.log(Messages.getString("LocalController.4"));
 				String newName = getName(map.getName(), tgtLangs.get(i).getCode());
 				File xliff = new File(folder, newName);
@@ -245,79 +257,7 @@ public class LocalController {
 			}
 		}
 		if (useTM) {
-			MessageFormat mftm = new MessageFormat(Messages.getString("LocalController.5"));
-			for (int i = 0; i < tgtLangs.size(); i++) {
-				logger.setStage(mftm.format(
-						new String[] { LanguageUtils.getLanguage(tgtLangs.get(i).getCode()).getDescription() }));
-				logger.log(Messages.getString("LocalController.6"));
-				String targetName = getName(map.getName(), tgtLangs.get(i).getCode());
-				File targetXliff = new File(folder, targetName);
-				SAXBuilder builder = new SAXBuilder();
-				builder.setEntityResolver(CatalogBuilder.getCatalog(Preferences.getInstance().getCatalogFile()));
-				Document doc1 = builder.build(targetXliff);
-				Element root1 = doc1.getRootElement();
-				Element firstFile = root1.getChild("file");
-				if (firstFile == null) {
-					logger.displayError(Messages.getString("LocalController.7"));
-					return;
-				}
-				String sourceLang = firstFile.getAttributeValue("source-language");
-				String targetLang = firstFile.getAttributeValue("target-language");
-				List<Element> segments = new Vector<>();
-				recurse(root1, segments);
-				List<Long> mems = project.getMemories();
-				List<ITmEngine> dbs = new Vector<>();
-				for (int i2 = 0; i2 < mems.size(); i2++) {
-					dbs.add(getTMEngine(mems.get(i2)));
-				}
-				MessageFormat mf2 = new MessageFormat(Messages.getString("LocalController.8"));
-				Iterator<Element> it = segments.iterator();
-				int count = 0;
-				while (it.hasNext()) {
-					if (count % 200 == 0) {
-						logger.log(mf2.format(new String[] { "" + count, "" + segments.size() }));
-					}
-					Element seg = it.next();
-					if (seg.getAttributeValue("approved", "no").equalsIgnoreCase("yes")) {
-						continue;
-					}
-					List<Element> matches = new Vector<>();
-					List<Element> res = null;
-					for (int i2 = 0; i2 < dbs.size(); i2++) {
-						res = searchText(dbs.get(i2), seg, sourceLang, targetLang, 70f, true);
-						if (res != null && !res.isEmpty()) {
-							matches.addAll(res);
-						}
-					}
-					matches = sortMatches(matches);
-					int max = matches.size();
-					if (max > 10) {
-						max = 10;
-					}
-					for (int i2 = 0; i2 < max; i2++) {
-						Element match = matches.get(i2);
-						try {
-							if (Float.parseFloat(match.getAttributeValue("match-quality")) >= 70) {
-								seg.addContent(match);
-								seg.addContent("\n");
-							}
-						} catch (NumberFormatException e) {
-							// do nothing
-						}
-					}
-					count++;
-				}
-				logger.log(mf2.format(new String[] { "" + segments.size(), "" + segments.size() }));
-				for (int i2 = 0; i2 < dbs.size(); i2++) {
-					ITmEngine db = dbs.get(i2);
-					db.close();
-				}
-				try (FileOutputStream out = new FileOutputStream(targetXliff)) {
-					XMLOutputter outputter = new XMLOutputter();
-					outputter.preserveSpace(true);
-					outputter.output(doc1, out);
-				}
-			}
+			applyTMParallel(folder, map, tgtLangs, project, logger, maxThreads);
 		}
 		if (generateCount) {
 			MessageFormat mf3 = new MessageFormat(Messages.getString("LocalController.9"));
@@ -347,6 +287,158 @@ public class LocalController {
 		Iterator<String> it = issues.iterator();
 		while (it.hasNext()) {
 			logger.logError(it.next());
+		}
+	}
+
+	private void applyTMParallel(File folder, File map, List<Language> tgtLangs, Project project, ILogger logger,
+			int maxThreads) throws IOException, SAXException, ParserConfigurationException, URISyntaxException,
+			SQLException {
+
+		MessageFormat mftm = new MessageFormat(Messages.getString("LocalController.5"));
+
+		// Create shared TM engine instances (reused by all threads)
+		List<Long> mems = project.getMemories();
+		List<ITmEngine> sharedDbs = new Vector<>();
+		for (Long memId : mems) {
+			sharedDbs.add(getTMEngine(memId));
+		}
+
+		// Determine thread pool size
+		int threadCount = Math.min(tgtLangs.size(), maxThreads);
+		synchronized (logger) {
+			MessageFormat mf = new MessageFormat(Messages.getString("LocalController.40"));
+			logger.log(mf.format(new Object[] { tgtLangs.size(), threadCount }));
+		}
+
+		ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+		List<Future<?>> futures = new ArrayList<>();
+		AtomicInteger completedLanguages = new AtomicInteger(0);
+		AtomicInteger errors = new AtomicInteger(0);
+
+		// Submit parallel tasks (one per target language)
+		for (int i = 0; i < tgtLangs.size(); i++) {
+			Language tgtLang = tgtLangs.get(i);
+			futures.add(executor.submit(() -> {
+				try {
+					synchronized (logger) {
+						logger.setStage(mftm.format(
+								new String[] { LanguageUtils.getLanguage(tgtLang.getCode()).getDescription() }));
+						logger.log(Messages.getString("LocalController.6"));
+					}
+
+					String targetName = getName(map.getName(), tgtLang.getCode());
+					File targetXliff = new File(folder, targetName);
+
+					SAXBuilder builder = new SAXBuilder();
+					builder.setEntityResolver(CatalogBuilder.getCatalog(Preferences.getInstance().getCatalogFile()));
+					Document doc1 = builder.build(targetXliff);
+					Element root1 = doc1.getRootElement();
+					Element firstFile = root1.getChild("file");
+
+					if (firstFile == null) {
+						synchronized (logger) {
+							logger.displayError(Messages.getString("LocalController.7"));
+						}
+						errors.incrementAndGet();
+						return;
+					}
+
+					String sourceLang = firstFile.getAttributeValue("source-language");
+					String targetLang = firstFile.getAttributeValue("target-language");
+
+					List<Element> segments = new Vector<>();
+					recurse(root1, segments);
+
+					// Process segments using shared database instances
+					for (Element seg : segments) {
+						if (seg.getAttributeValue("approved", "no").equalsIgnoreCase("yes")) {
+							continue;
+						}
+
+						List<Element> matches = new Vector<>();
+						for (ITmEngine db : sharedDbs) {
+							List<Element> res = searchText(db, seg, sourceLang, targetLang, 70f, true);
+							if (res != null && !res.isEmpty()) {
+								matches.addAll(res);
+							}
+						}
+
+						matches = sortMatches(matches);
+						int max = Math.min(matches.size(), 10);
+						for (int i2 = 0; i2 < max; i2++) {
+							Element match = matches.get(i2);
+							try {
+								if (Float.parseFloat(match.getAttributeValue("match-quality")) >= 70) {
+									seg.addContent(match);
+									seg.addContent("\n");
+								}
+							} catch (NumberFormatException e) {
+								// do nothing
+							}
+						}
+					}
+
+					// Save XLIFF
+					try (FileOutputStream out = new FileOutputStream(targetXliff)) {
+						XMLOutputter outputter = new XMLOutputter();
+						outputter.preserveSpace(true);
+						outputter.output(doc1, out);
+					}
+
+					// Track completion
+					int completed = completedLanguages.incrementAndGet();
+					synchronized (logger) {
+						MessageFormat mf = new MessageFormat(Messages.getString("LocalController.41"));
+						logger.log(mf.format(
+								new Object[] { completed, tgtLangs.size(), (completed * 100) / tgtLangs.size() }));
+					}
+
+				} catch (Exception e) {
+					errors.incrementAndGet();
+					synchronized (logger) {
+						MessageFormat mf = new MessageFormat(Messages.getString("LocalController.42"));
+						logger.logError(mf.format(new Object[] { tgtLang.getCode(), e.getMessage() }));
+					}
+				}
+			}));
+		}
+
+		// Wait for all threads to complete
+		executor.shutdown();
+		try {
+			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			synchronized (logger) {
+				logger.displayError(Messages.getString("LocalController.43"));
+			}
+		}
+
+		// Check for errors in threads
+		for (Future<?> future : futures) {
+			try {
+				future.get();
+			} catch (Exception e) {
+				synchronized (logger) {
+					MessageFormat mf = new MessageFormat(Messages.getString("LocalController.44"));
+					logger.logError(mf.format(new Object[] { e.getMessage() }));
+				}
+			}
+		}
+
+		// Close shared databases
+		for (ITmEngine db : sharedDbs) {
+			db.close();
+		}
+
+		synchronized (logger) {
+			if (errors.get() > 0) {
+				MessageFormat mf = new MessageFormat(Messages.getString("LocalController.45"));
+				logger.log(mf.format(new Object[] { errors.get() }));
+			} else {
+				MessageFormat mf = new MessageFormat(Messages.getString("LocalController.46"));
+				logger.log(mf.format(new Object[] { tgtLangs.size() }));
+			}
 		}
 	}
 
@@ -589,7 +681,7 @@ public class LocalController {
 	}
 
 	public void importXliff(Project project, String xliffDocument, String targetFolder, boolean updateTM,
-			boolean acceptUnapproved, boolean ignoreTagErrors, ILogger logger)
+			boolean acceptUnapproved, boolean ignoreTagErrors, int maxThreads, ILogger logger)
 			throws NumberFormatException, IOException, SAXException, ParserConfigurationException,
 			SQLException, URISyntaxException, JSONException, ParseException {
 
@@ -659,7 +751,7 @@ public class LocalController {
 		Xliff2DitaMap.setDataLogger(logger);
 		logger.setStage(Messages.getString("LocalController.17"));
 		List<String> res = Merge.merge(xliffDocument, targetFolder, Preferences.getInstance().getCatalogFile(),
-				acceptUnapproved);
+				acceptUnapproved, "" + maxThreads);
 		if (!Constants.SUCCESS.equals(res.get(0))) {
 			logger.displayError(res.get(1));
 			return;

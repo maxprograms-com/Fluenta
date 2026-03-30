@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,74 +10,76 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-class Main {
+import { ipcRenderer } from 'electron';
+import { MemoriesView } from "./memoriesView.js";
+import { ProjectsView } from "./projectsView.js";
+
+export class Main {
 
     projectsView: ProjectsView;
     memoriesView: MemoriesView;
-
-    electron = require('electron');
 
     constructor() {
 
         this.projectsView = new ProjectsView();
         this.memoriesView = new MemoriesView();
 
-        this.electron.ipcRenderer.send('get-theme');
-        this.electron.ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: any) => {
+        ipcRenderer.send('get-theme');
+        ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: any) => {
             (document.getElementById('theme') as HTMLLinkElement).href = theme;
         });
-        this.electron.ipcRenderer.on('show-projects', () => {
+        ipcRenderer.on('show-projects', () => {
             this.showProjects();
         });
-        this.electron.ipcRenderer.on('show-memories', () => {
+        ipcRenderer.on('show-memories', () => {
             this.showMemories();
         });
-        this.electron.ipcRenderer.on('set-size', () => {
+        ipcRenderer.on('set-size', () => {
             this.projectsView.setSizes();
             this.memoriesView.setSizes();
             this.setSizes();
         });
-        this.electron.ipcRenderer.on('start-waiting', () => {
+        ipcRenderer.on('start-waiting', () => {
             document.body.classList.add("wait");
         });
-        this.electron.ipcRenderer.on('end-waiting', () => {
+        ipcRenderer.on('end-waiting', () => {
             document.body.classList.remove("wait");
         });
-        this.electron.ipcRenderer.on('set-status', (event: Electron.IpcRendererEvent, status: string) => {
+        ipcRenderer.on('set-status', (event: Electron.IpcRendererEvent, status: string) => {
             this.setStatus(status);
         });
-        this.electron.ipcRenderer.on('generate-xliff', () => {
+        ipcRenderer.on('generate-xliff', () => {
             this.projectsView.generateXLIFF();
         });
-        this.electron.ipcRenderer.on('import-xliff',() =>{
+        ipcRenderer.on('import-xliff', () => {
             this.projectsView.importXLIFF();
         });
-        document.getElementById('projectsButton').addEventListener('click', () => {
+        document.getElementById('projectsButton')?.addEventListener('click', () => {
             this.showProjects();
         });
-        document.getElementById('memoriesButton').addEventListener('click', () => {
+        document.getElementById('memoriesButton')?.addEventListener('click', () => {
             this.showMemories();
         });
-        document.getElementById('updatesButton').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('check-updates');
+        document.getElementById('updatesButton')?.addEventListener('click', () => {
+            ipcRenderer.send('check-updates');
         });
-        document.getElementById('updatesButton').addEventListener('click', () => {
+        document.getElementById('updatesButton')?.addEventListener('click', () => {
         });
-        document.getElementById('settingsButton').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('show-settings');
+        document.getElementById('settingsButton')?.addEventListener('click', () => {
+            ipcRenderer.send('show-settings');
         });
-        document.getElementById('aboutButton').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('show-about');
+        document.getElementById('aboutButton')?.addEventListener('click', () => {
+            ipcRenderer.send('show-about');
         });
         this.showProjects();
         this.setSizes();
     }
 
     setSizes() {
-        let top: number = document.getElementById('leftTop').clientHeight;
-        let bottom: number = document.getElementById('leftBottom').clientHeight;
+        let top: number = (document.getElementById('leftTop') as HTMLDivElement).clientHeight;
+        let bottom: number = (document.getElementById('leftBottom') as HTMLDivElement).clientHeight;
         let style: string = 'height: calc(100% - ' + (top + bottom + 8) + 'px);'; // add 8px bottom margin
-        document.getElementById('leftCenter').setAttribute('style', style);
+        (document.getElementById('leftCenter') as HTMLDivElement).setAttribute('style', style);
     }
 
     setStatus(status: string): void {
@@ -91,22 +93,16 @@ class Main {
     }
 
     showProjects(): void {
-        document.getElementById('projectsButton').classList.add('selectedButton');
-        document.getElementById('memoriesButton').classList.remove('selectedButton');
+        document.getElementById('projectsButton')?.classList.add('selectedButton');
+        document.getElementById('memoriesButton')?.classList.remove('selectedButton');
         this.memoriesView.hide();
         this.projectsView.show();
     }
 
     showMemories(): void {
-        document.getElementById('projectsButton').classList.remove('selectedButton');
-        document.getElementById('memoriesButton').classList.add('selectedButton');
+        document.getElementById('projectsButton')?.classList.remove('selectedButton');
+        document.getElementById('memoriesButton')?.classList.add('selectedButton');
         this.projectsView.hide();
         this.memoriesView.show();
     }
-}
-
-try {
-    new Main();
-} catch (error) {
-    console.log(error);
 }

@@ -9,5 +9,6 @@
     "ja-JP",
     "es"
   ],
-  "translateComments": false
+  "translateComments": false,
+  "maxThreads": 4
 }

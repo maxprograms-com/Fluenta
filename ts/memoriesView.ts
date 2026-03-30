@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,61 +10,62 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-class MemoriesView {
+import { ipcRenderer } from 'electron';
+import { Memory } from "./memory.js";
 
-    electron = require('electron');
+export class MemoriesView {
 
     container: HTMLDivElement;
     tableContainer: HTMLDivElement;
     tbody: HTMLTableSectionElement;
-    memories: Memory[];
+    memories: Memory[] = [];
     memorySortAscending: boolean = true;
     memorySortFielD: string = 'description';
-    selectedMemories: number[];
-    appLanguage: string;
+    selectedMemories: number[] = [];
+    appLanguage: string = '';
 
     constructor() {
         this.selectedMemories = [];
         this.container = document.getElementById('memoriesView') as HTMLDivElement;
         this.tbody = document.getElementById('memoriesTableBody') as HTMLTableSectionElement;
         this.tableContainer = document.getElementById('memoriesTableContainer') as HTMLDivElement;
-        this.electron.ipcRenderer.on('import-tmx', () => {
+        ipcRenderer.on('import-tmx', () => {
             this.importTMX();
         });
-        this.electron.ipcRenderer.on('export-tmx', () => {
+        ipcRenderer.on('export-tmx', () => {
             this.exportTMX();
         });
-        document.getElementById('addMemory').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('show-add-memory');
+        (document.getElementById('addMemory') as HTMLAnchorElement).addEventListener('click', () => {
+            ipcRenderer.send('show-add-memory');
         });
-        document.getElementById('editMemory').addEventListener('click', () => {
+        (document.getElementById('editMemory') as HTMLAnchorElement).addEventListener('click', () => {
             this.editMemory();
         });
-        this.electron.ipcRenderer.on('edit-memory', () => {
+        ipcRenderer.on('edit-memory', () => {
             this.editMemory();
         });
-        document.getElementById('selectAllMemories').addEventListener('click', () => {
+        (document.getElementById('selectAllMemories') as HTMLInputElement).addEventListener('click', () => {
             this.selectAllMemories((document.getElementById('selectAllMemories') as HTMLInputElement).checked);
         });
-        document.getElementById('removeMemory').addEventListener('click', () => {
+        (document.getElementById('removeMemory') as HTMLAnchorElement).addEventListener('click', () => {
             this.removeMemories();
         });
-        document.getElementById('importTMX').addEventListener('click', () => {
+        (document.getElementById('importTMX') as HTMLAnchorElement).addEventListener('click', () => {
             this.importTMX();
         });
-        document.getElementById('exportTMX').addEventListener('click', () => {
+        (document.getElementById('exportTMX') as HTMLAnchorElement).addEventListener('click', () => {
             this.exportTMX();
         });
-        this.electron.ipcRenderer.send('get-app-language');
-        this.electron.ipcRenderer.on('set-app-language', (event: any, language: string) => {
+        ipcRenderer.send('get-app-language');
+        ipcRenderer.on('set-app-language', (event: any, language: string) => {
             this.appLanguage = language;
-            this.electron.ipcRenderer.send('get-memories', 'MemoriesView');
+            ipcRenderer.send('get-memories', 'MemoriesView');
         });
-        this.electron.ipcRenderer.on('set-memories', (event: any, memories: Memory[]) => {
+        ipcRenderer.on('set-memories', (event: any, memories: Memory[]) => {
             this.memories = memories;
             this.displayMemories();
         });
-        document.getElementById('memory-description').addEventListener('click', () => {
+        (document.getElementById('memory-description') as HTMLTableCellElement).addEventListener('click', () => {
             (document.getElementById('memory-' + this.memorySortFielD) as HTMLTableCellElement).classList.remove('arrow-down');
             (document.getElementById('memory-' + this.memorySortFielD) as HTMLTableCellElement).classList.remove('arrow-up');
             if (this.memorySortFielD === 'description') {
@@ -75,7 +76,7 @@ class MemoriesView {
             }
             this.displayMemories();
         });
-        document.getElementById('memory-srcLang').addEventListener('click', () => {
+        (document.getElementById('memory-srcLang') as HTMLTableCellElement).addEventListener('click', () => {
             (document.getElementById('memory-' + this.memorySortFielD) as HTMLTableCellElement).classList.remove('arrow-down');
             (document.getElementById('memory-' + this.memorySortFielD) as HTMLTableCellElement).classList.remove('arrow-up');
             if (this.memorySortFielD === 'srcLang') {
@@ -86,7 +87,7 @@ class MemoriesView {
             }
             this.displayMemories();
         });
-        document.getElementById('memory-created').addEventListener('click', () => {
+        (document.getElementById('memory-created') as HTMLTableCellElement).addEventListener('click', () => {
             (document.getElementById('memory-' + this.memorySortFielD) as HTMLTableCellElement).classList.remove('arrow-down');
             (document.getElementById('memory-' + this.memorySortFielD) as HTMLTableCellElement).classList.remove('arrow-up');
             if (this.memorySortFielD === 'created') {
@@ -97,7 +98,7 @@ class MemoriesView {
             }
             this.displayMemories();
         });
-        document.getElementById('memory-updated').addEventListener('click', () => {
+        (document.getElementById('memory-updated') as HTMLTableCellElement).addEventListener('click', () => {
             (document.getElementById('memory-' + this.memorySortFielD) as HTMLTableCellElement).classList.remove('arrow-down');
             (document.getElementById('memory-' + this.memorySortFielD) as HTMLTableCellElement).classList.remove('arrow-up');
             if (this.memorySortFielD === 'updated') {
@@ -113,50 +114,50 @@ class MemoriesView {
 
     removeMemories(): void {
         if (this.selectedMemories.length === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectMemory' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectMemory' });
             return;
         }
-        this.electron.ipcRenderer.send('remove-memories', this.selectedMemories);
+        ipcRenderer.send('remove-memories', this.selectedMemories);
         this.selectedMemories = [];
     }
 
     exportTMX(): void {
         if (this.selectedMemories.length === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectMemory' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectMemory' });
             return;
         }
         if (this.selectedMemories.length > 1) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectOneMemory' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectOneMemory' });
             return;
         }
         let memory: Memory = this.memories.filter((value: Memory) => {
             return value.id === this.selectedMemories[0];
         })[0];
-        this.electron.ipcRenderer.send('show-export-tmx', { id: memory.id, name: memory.name });
+        ipcRenderer.send('show-export-tmx', { id: memory.id, name: memory.name });
     }
 
     importTMX(): void {
         if (this.selectedMemories.length === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectMemory' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectMemory' });
             return;
         }
         if (this.selectedMemories.length > 1) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectOneMemory' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectOneMemory' });
             return;
         }
-        this.electron.ipcRenderer.send('show-import-tmx', this.selectedMemories[0]);
+        ipcRenderer.send('show-import-tmx', this.selectedMemories[0]);
     }
 
     editMemory(): void {
         if (this.selectedMemories.length === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectMemory' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectMemory' });
             return;
         }
         if (this.selectedMemories.length > 1) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectOneMemory' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'memoriesView', key: 'selectOneMemory' });
             return;
         }
-        this.electron.ipcRenderer.send('edit-selected-memory', this.selectedMemories[0]);
+        ipcRenderer.send('edit-selected-memory', this.selectedMemories[0]);
     }
 
     displayMemories(): void {
@@ -167,8 +168,8 @@ class MemoriesView {
             (document.getElementById('memory-' + this.memorySortFielD) as HTMLTableCellElement).classList.add('arrow-down');
         }
         this.memories.sort((a: Memory, b: Memory) => {
-            let x: string;
-            let y: string;
+            let x: string = '';
+            let y: string = '';
             if (this.memorySortFielD === 'description') {
                 x = a.name.toLocaleLowerCase(this.appLanguage);
                 y = b.name.toLocaleLowerCase(this.appLanguage);
@@ -270,6 +271,6 @@ class MemoriesView {
         let rightSide: HTMLDivElement = document.getElementById('rightSide') as HTMLDivElement;
         let memoriesTopBar: HTMLDivElement = document.getElementById('memoriesTopBar') as HTMLDivElement;
         this.tableContainer.style.height = (rightSide.clientHeight - memoriesTopBar.clientHeight) + 'px';
-        this.tableContainer.style.width = (document.body.clientWidth - document.getElementById('leftSide').clientWidth) + 'px';
+        this.tableContainer.style.width = (document.body.clientWidth - (document.getElementById('leftSide') as HTMLDivElement).clientWidth) + 'px';
     }
 }

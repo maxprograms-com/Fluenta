@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,37 +10,38 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-class ProjectMemoriesDialog {
+import { ipcRenderer } from 'electron';
+import { Memory } from "./memory.js";
 
-    electron = require('electron');
+export class ProjectMemoriesDialog {
 
     memories: Memory[] = [];
     selectedMemories: number[] = [];
 
     constructor() {
-        this.electron.ipcRenderer.send('get-theme');
-        this.electron.ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
+        ipcRenderer.send('get-theme');
+        ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
             (document.getElementById('theme') as HTMLLinkElement).href = theme;
-            this.electron.ipcRenderer.send('get-memories', 'ProjectMemoriesDialog');
+            ipcRenderer.send('get-memories', 'ProjectMemoriesDialog');
         });
-        this.electron.ipcRenderer.on('set-memories', (event: Electron.IpcRendererEvent, memories: Memory[]) => {
+        ipcRenderer.on('set-memories', (event: Electron.IpcRendererEvent, memories: Memory[]) => {
             this.memories = memories;
-            this.electron.ipcRenderer.send('get-project-memories');
+            ipcRenderer.send('get-project-memories');
         });
-        this.electron.ipcRenderer.on('set-project-memories', (event: Electron.IpcRendererEvent, memories: number[]) => {
+        ipcRenderer.on('set-project-memories', (event: Electron.IpcRendererEvent, memories: number[]) => {
             this.selectedMemories = memories;
             this.displayMemories();
         });
-        document.getElementById('saveMemories').addEventListener('click', () => {
+        document.getElementById('saveMemories')?.addEventListener('click', () => {
             this.saveMemories();
         });
         setTimeout(() => {
-            this.electron.ipcRenderer.send('set-height', { window: 'projectMemoriesDialog', width: document.body.clientWidth, height: document.body.clientHeight });
+            ipcRenderer.send('set-height', { window: 'projectMemoriesDialog', width: document.body.clientWidth, height: document.body.clientHeight });
         }, 300);
     }
 
     saveMemories() {
-        this.electron.ipcRenderer.send('save-project-memories', this.selectedMemories);
+        ipcRenderer.send('save-project-memories', this.selectedMemories);
     }
 
     displayMemories() {

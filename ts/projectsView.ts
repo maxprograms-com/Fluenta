@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,9 +10,10 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-class ProjectsView {
+import { ipcRenderer, webUtils } from 'electron';
+import { Project } from "./project.js";
 
-    electron = require('electron');
+export class ProjectsView {
 
     container: HTMLDivElement;
     tableContainer: HTMLDivElement;
@@ -20,10 +21,10 @@ class ProjectsView {
     selectedProjects: number[];
     projectSortFielD: string = 'description';
     projectSortAscending: boolean = true;
-    projects: Project[];
-    home: string;
-    lang: string;
-    statusMap: Map<string, string>;
+    projects: Project[] = [];
+    home: string = '';
+    lang: string = '';
+    statusMap: Map<string, string> = new Map<string, string>(); 
 
     constructor() {
         this.selectedProjects = [];
@@ -37,49 +38,49 @@ class ProjectsView {
         this.container.addEventListener('dragenter', () => { this.dragEnterListener(this.container) });
         this.container.addEventListener('dragleave', () => { this.dragLeaveListener(this.container) });
 
-        this.electron.ipcRenderer.send('get-projects');
-        this.electron.ipcRenderer.on('set-projects', (event: any, arg: { projects: Project[], home: string, lang: string, statusMap: Map<string, string> }) => {
+        ipcRenderer.send('get-projects');
+        ipcRenderer.on('set-projects', (event: any, arg: { projects: Project[], home: string, lang: string, statusMap: Map<string, string> }) => {
             this.projects = arg.projects;
             this.lang = arg.lang;
             this.statusMap = arg.statusMap;
             this.home = arg.home;
             this.displayProjects();
         });
-        this.electron.ipcRenderer.on('request-remove-project', () => {
+        ipcRenderer.on('request-remove-project', () => {
             this.removeProjects();
         });
-        this.electron.ipcRenderer.on('edit-project', () => {
+        ipcRenderer.on('edit-project', () => {
             this.editProject();
         });
-        document.getElementById('selectAllProjects').addEventListener('click', () => {
+        (document.getElementById('selectAllProjects') as HTMLInputElement).addEventListener('click', () => {
             this.selectAllProjects((document.getElementById('selectAllProjects') as HTMLInputElement).checked);
         });
-        document.getElementById('addProject').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('show-add-project');
+        (document.getElementById('addProject') as HTMLAnchorElement).addEventListener('click', () => {
+            ipcRenderer.send('show-add-project');
         });
-        document.getElementById('editProject').addEventListener('click', () => {
+        (document.getElementById('editProject') as HTMLAnchorElement).addEventListener('click', () => {
             this.editProject();
         });
-        this.electron.ipcRenderer.on('project-info', () => {
+        ipcRenderer.on('project-info', () => {
             this.projectStatus();
         });
-        document.getElementById('removeProject').addEventListener('click', () => {
+        (document.getElementById('removeProject') as HTMLAnchorElement).addEventListener('click', () => {
             if (this.selectedProjects.length === 0) {
-                this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
+                ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
                 return;
             }
-            this.electron.ipcRenderer.send('remove-projects', this.selectedProjects);
+            ipcRenderer.send('remove-projects', this.selectedProjects);
         });
-        document.getElementById('projectStatus').addEventListener('click', () => {
+        (document.getElementById('projectStatus') as HTMLAnchorElement).addEventListener('click', () => {
             this.projectStatus();
         });
-        document.getElementById('generateXLIFF').addEventListener('click', () => {
+        (document.getElementById('generateXLIFF') as HTMLAnchorElement).addEventListener('click', () => {
             this.generateXLIFF();
         });
-        document.getElementById('importXLIFF').addEventListener('click', () => {
+        (document.getElementById('importXLIFF') as HTMLAnchorElement).addEventListener('click', () => {
             this.importXLIFF();
         });
-        document.getElementById('project-description').addEventListener('click', () => {
+        (document.getElementById('project-description') as HTMLTableCellElement).addEventListener('click', () => {
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-down');
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-up');
             if (this.projectSortFielD === 'description') {
@@ -90,7 +91,7 @@ class ProjectsView {
             }
             this.displayProjects();
         });
-        document.getElementById('project-map').addEventListener('click', () => {
+        (document.getElementById('project-map') as HTMLTableCellElement).addEventListener('click', () => {
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-down');
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-up');
             if (this.projectSortFielD === 'map') {
@@ -101,7 +102,7 @@ class ProjectsView {
             }
             this.displayProjects();
         });
-        document.getElementById('project-srcLang').addEventListener('click', () => {
+        (document.getElementById('project-srcLang') as HTMLTableCellElement).addEventListener('click', () => {
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-down');
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-up');
             if (this.projectSortFielD === 'srcLang') {
@@ -112,7 +113,7 @@ class ProjectsView {
             }
             this.displayProjects();
         });
-        document.getElementById('project-status').addEventListener('click', () => {
+        (document.getElementById('project-status') as HTMLTableCellElement).addEventListener('click', () => {
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-down');
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-up');
             if (this.projectSortFielD === 'status') {
@@ -123,7 +124,7 @@ class ProjectsView {
             }
             this.displayProjects();
         });
-        document.getElementById('project-created').addEventListener('click', () => {
+        (document.getElementById('project-created') as HTMLTableCellElement).addEventListener('click', () => {
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-down');
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-up');
             if (this.projectSortFielD === 'created') {
@@ -134,7 +135,7 @@ class ProjectsView {
             }
             this.displayProjects();
         });
-        document.getElementById('project-updated').addEventListener('click', () => {
+        (document.getElementById('project-updated') as HTMLTableCellElement).addEventListener('click', () => {
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-down');
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.remove('arrow-up');
             if (this.projectSortFielD === 'updated') {
@@ -149,50 +150,50 @@ class ProjectsView {
 
     removeProjects(): void {
         if (this.selectedProjects.length === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
             return;
         }
-        this.electron.ipcRenderer.send('remove-projects', this.selectedProjects);
+        ipcRenderer.send('remove-projects', this.selectedProjects);
         this.selectedProjects = [];
     }
 
     editProject(): void {
         if (this.selectedProjects.length === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
             return;
         }
         if (this.selectedProjects.length > 1) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectOneProject' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectOneProject' });
             return;
         }
-        this.electron.ipcRenderer.send('edit-selected-project', this.selectedProjects[0]);
+        ipcRenderer.send('edit-selected-project', this.selectedProjects[0]);
     }
 
     projectStatus(): void {
         if (this.selectedProjects.length === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
             return;
         }
         if (this.selectedProjects.length > 1) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectOneProject' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectOneProject' });
             return;
         }
-        this.electron.ipcRenderer.send('show-project-status', this.selectedProjects[0]);
+        ipcRenderer.send('show-project-status', this.selectedProjects[0]);
     }
 
     generateXLIFF(): void {
         if (this.selectedProjects.length === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
             return;
         }
         if (this.selectedProjects.length > 1) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectOneProject' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectOneProject' });
             return;
         }
         for (let project of this.projects) {
             if (project.id === this.selectedProjects[0]) {
                 console.log(JSON.stringify(project, null, 2));
-                this.electron.ipcRenderer.send('show-generate-xliff', { projectId: project.id, description: project.title });
+                ipcRenderer.send('show-generate-xliff', { projectId: project.id, description: project.title });
                 return;
             }
         }
@@ -200,17 +201,17 @@ class ProjectsView {
 
     importXLIFF(): void {
         if (this.selectedProjects.length === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectProject' });
             return;
         }
         if (this.selectedProjects.length > 1) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectOneProject' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'projectsView', key: 'selectOneProject' });
             return;
         }
         for (let project of this.projects) {
             if (project.id === this.selectedProjects[0]) {
                 console.log(JSON.stringify(project, null, 2));
-                this.electron.ipcRenderer.send('show-import-xliff', { projectId: project.id, description: project.title });
+                ipcRenderer.send('show-import-xliff', { projectId: project.id, description: project.title });
                 return;
             }
         }
@@ -224,8 +225,8 @@ class ProjectsView {
             (document.getElementById('project-' + this.projectSortFielD) as HTMLTableCellElement).classList.add('arrow-down');
         }
         this.projects.sort((a: Project, b: Project) => {
-            let x: string;
-            let y: string;
+            let x: string = '';
+            let y: string = '';
             if (this.projectSortFielD === 'description') {
                 x = a.title.toLocaleLowerCase(this.lang)
                 y = b.title.toLocaleLowerCase(this.lang)
@@ -233,8 +234,8 @@ class ProjectsView {
                 x = a.map.toLocaleLowerCase(this.lang)
                 y = b.map.toLocaleLowerCase(this.lang)
             } else if (this.projectSortFielD === 'status') {
-                x = this.statusMap.get(a.status);
-                y = this.statusMap.get(b.status);
+                x = this.statusMap.get(a.status) || '';
+                y = this.statusMap.get(b.status) || '';
             } else if (this.projectSortFielD === 'srcLang') {
                 x = a.srcLanguage;
                 y = b.srcLanguage;
@@ -295,7 +296,7 @@ class ProjectsView {
 
             cell = document.createElement('td');
             cell.classList.add('center');
-            cell.textContent = this.statusMap.get(project.status);
+            cell.textContent = this.statusMap.get(project.status) as string;
             row.appendChild(cell);
 
             cell = document.createElement('td');
@@ -346,18 +347,20 @@ class ProjectsView {
         let rightSide: HTMLDivElement = document.getElementById('rightSide') as HTMLDivElement;
         let projectsTopBar: HTMLDivElement = document.getElementById('projectsTopBar') as HTMLDivElement;
         this.tableContainer.style.height = (rightSide.clientHeight - projectsTopBar.clientHeight) + 'px';
-        this.tableContainer.style.width = (document.body.clientWidth - document.getElementById('leftSide').clientWidth) + 'px';
+        this.tableContainer.style.width = (document.body.clientWidth - (document.getElementById('leftSide') as HTMLDivElement).clientWidth) + 'px';
     }
 
     dropListener(event: DragEvent, container: HTMLElement): void {
         event.preventDefault();
         event.stopPropagation();
         let filesList: string[] = [];
-        for (const f of event.dataTransfer.files) {
-            filesList.push(this.electron.webUtils.getPathForFile(f));
+        if (event.dataTransfer) {
+            for (const f of event.dataTransfer.files) {
+                filesList.push(webUtils.getPathForFile(f));
+            }
         }
         if (filesList.length === 1) {
-            this.electron.ipcRenderer.send('files-dropped', filesList[0]);
+            ipcRenderer.send('files-dropped', filesList[0]);
         }
         container.style.opacity = '1';
     }
@@ -373,6 +376,8 @@ class ProjectsView {
     dragOverListener(event: DragEvent): void {
         event.preventDefault();
         event.stopPropagation();
-        event.dataTransfer.dropEffect = 'link';
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'link';
+        }
     }
 }

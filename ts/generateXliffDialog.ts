@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2025 Maxprograms.
+ * Copyright (c) 2015-2026 Maxprograms.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 1.0
@@ -10,52 +10,54 @@
  *     Maxprograms - initial API and implementation
  *******************************************************************************/
 
-class GenerateXliffDialog {
+import { ipcRenderer } from 'electron';
+import { LanguageInterface } from "./languages.js";
 
-    electron = require('electron');
-    projectId: number;
+export class GenerateXliffDialog {
+
+    projectId: number = -1;
     selectedLanguages: LanguageInterface[] = [];
 
     constructor() {
-        this.electron.ipcRenderer.send('get-theme');
-        this.electron.ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
+        ipcRenderer.send('get-theme');
+        ipcRenderer.on('set-theme', (event: Electron.IpcRendererEvent, theme: string) => {
             (document.getElementById('theme') as HTMLLinkElement).href = theme;
         });
         document.addEventListener('keydown', (event: KeyboardEvent) => {
             if (event.code === 'Escape') {
-                this.electron.ipcRenderer.send('close-generateXliff');
+                ipcRenderer.send('close-generateXliff');
             }
             if (event.code === 'Enter') {
                 this.generateXliff();
             }
         });
-        this.electron.ipcRenderer.on('set-project', (event: Electron.IpcRendererEvent, arg: { projectId: number, description: string }) => {
+        ipcRenderer.on('set-project', (event: Electron.IpcRendererEvent, arg: { projectId: number, description: string }) => {
             this.projectId = arg.projectId;
-            document.getElementById('projectDescription').innerText = arg.description;
-            this.electron.ipcRenderer.send('get-project-languages', arg.projectId);
+            (document.getElementById('projectDescription') as HTMLTableCellElement).innerText = arg.description;
+            ipcRenderer.send('get-project-languages', arg.projectId);
         });
-        this.electron.ipcRenderer.on('set-xliff-defaults', (event: Electron.IpcRendererEvent, arg: any) => {
+        ipcRenderer.on('set-xliff-defaults', (event: Electron.IpcRendererEvent, arg: any) => {
             this.setDefaults(arg);
         });
-        this.electron.ipcRenderer.on('set-project-languages', (event: Electron.IpcRendererEvent, arg: { srcLang: LanguageInterface, tgtLangs: LanguageInterface[] }) => {
+        ipcRenderer.on('set-project-languages', (event: Electron.IpcRendererEvent, arg: { srcLang: LanguageInterface, tgtLangs: LanguageInterface[] }) => {
             this.setLanguages(arg.tgtLangs);
         });
-        document.getElementById('generateXliff').addEventListener('click', () => {
+        document.getElementById('generateXliff')?.addEventListener('click', () => {
             this.generateXliff();
         });
-        document.getElementById('folderBrowseButton').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('select-xliff-folder');
+        document.getElementById('folderBrowseButton')?.addEventListener('click', () => {
+            ipcRenderer.send('select-xliff-folder');
         });
-        this.electron.ipcRenderer.on('set-xliff-folder', (event: Electron.IpcRendererEvent, folder: string) => {
+        ipcRenderer.on('set-xliff-folder', (event: Electron.IpcRendererEvent, folder: string) => {
             (document.getElementById('xliffFolder') as HTMLInputElement).value = folder;
         });
-        document.getElementById('ditavalBrowseButton').addEventListener('click', () => {
-            this.electron.ipcRenderer.send('select-ditaval');
+        document.getElementById('ditavalBrowseButton')?.addEventListener('click', () => {
+            ipcRenderer.send('select-ditaval');
         });
-        this.electron.ipcRenderer.on('set-ditaval', (event: Electron.IpcRendererEvent, ditaval: string) => {
+        ipcRenderer.on('set-ditaval', (event: Electron.IpcRendererEvent, ditaval: string) => {
             (document.getElementById('ditavalFile') as HTMLInputElement).value = ditaval;
         });
-        document.getElementById('xliffFolder').focus();
+        document.getElementById('xliffFolder')?.focus();
         this.setSizes();
     }
 
@@ -97,18 +99,18 @@ class GenerateXliffDialog {
         let rightContainer: HTMLDivElement = document.getElementById('rightContainer') as HTMLDivElement;
         rightContainer.style.height = leftContainer.clientHeight + 'px';
         setTimeout(() => {
-            this.electron.ipcRenderer.send('set-height', { window: 'generateXliff', width: document.body.clientWidth, height: document.body.clientHeight });
+            ipcRenderer.send('set-height', { window: 'generateXliff', width: document.body.clientWidth, height: document.body.clientHeight });
         }, 300);
     }
 
     generateXliff(): void {
         let folder: string = (document.getElementById('xliffFolder') as HTMLInputElement).value;
         if (folder === '') {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'generateXliffDialog', key: 'selectXliffFolder' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'generateXliffDialog', key: 'selectXliffFolder' });
             return;
         }
         if (this.selectedLanguages.length === 0) {
-            this.electron.ipcRenderer.send('show-message', { type: 'warning', group: 'generateXliffDialog', key: 'selectLanguages' });
+            ipcRenderer.send('show-message', { type: 'warning', group: 'generateXliffDialog', key: 'selectLanguages' });
             return;
         }
         let tgtLangs: string[] = [];
@@ -134,7 +136,7 @@ class GenerateXliffDialog {
         let ignoreTracked: boolean = (document.getElementById('trackedChanges') as HTMLInputElement).checked;
         let ignoreSVG: boolean = (document.getElementById('ignoreSvg') as HTMLInputElement).checked;
         let embedSkeleton: boolean = (document.getElementById('embed') as HTMLInputElement).checked;
-        this.electron.ipcRenderer.send('generate-xliff-file', {
+        ipcRenderer.send('generate-xliff-file', {
             id: this.projectId,
             xliffFolder: folder,
             tgtLang: tgtLangs,
@@ -167,6 +169,7 @@ class GenerateXliffDialog {
         if (arg.version === '2.1') {
             (document.getElementById('2.1') as HTMLInputElement).checked = true;
         }
+
         if (arg.version === '2.2') {
             (document.getElementById('2.2') as HTMLInputElement).checked = true;
         }
