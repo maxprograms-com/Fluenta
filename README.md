@@ -2,78 +2,100 @@
 
 ![Fluenta logo](https://www.maxprograms.com/images/fluenta_128.png)
 
-Fluenta is a tool designed to simplify the translation and localization of DITA projects combining two open standards from OASIS: *DITA* and *XLIFF*.
+Fluenta manages the translation workflow of DITA projects by combining two open standards from OASIS: *DITA* and *XLIFF*.
 
-Fluenta implements the workflow described in the article [Use XLIFF to Translate DITA Projects](https://www.maxprograms.com/articles/ditaxliff.html), making it easy to manage the translation side of your DITA projects according to the procedure recommended by the *OASIS DITA Adoption Technical Committee* (see the official TC publication, available in PDF at [OASIS](https://www.oasis-open.org/committees/download.php/48340/DITA12XLIFFArticle.pdf) and in HTML format at [ditatranslation.com](https://www.ditatranslation.com/articles/ditaxliff.html)).
+If your workflow involves DITA content and requires a structured, standards-based translation process, Fluenta provides a consistent way to prepare, manage, and deliver translations.
 
-## Licenses
+---
 
-Fluenta is available in two modes:
+## Typical workflow
 
-- Source Code
-- Yearly Subscriptions for installers and support
+1. Analyze the DITA project structure
+2. Extract translatable content into XLIFF
+3. Translate using CAT tools
+4. Reintegrate translations back into the DITA project
 
-### Source Code
+---
 
-Anyone can download the source code, compile, modify and use it at no cost in compliance with the accompanying license terms. See [licenses](licenses/README.md) directory.
+## Why Fluenta
 
-You can subscribe to [Maxprograms Support](https://groups.io/g/maxprograms/) at Groups.io and request peer assistance for the source code version there.
+- Designed specifically for DITA translation workflows
+- Uses XLIFF for interoperability with CAT tools
+- Handles complex DITA features such as conref, keyref, and specialization
+- Designed for large, structured DITA documentation projects
+- Reduces manual file handling by generating consolidated translation packages
 
-### Subscriptions
+---
 
-Ready to use installers and technical support for Fluenta are available as yearly subscriptions at [Maxprograms Online Store](https://www.maxprograms.com/store/buy.html).
+## How it works
 
-The version of Fluenta included in the official installers from [Fluenta's Home Page](https://www.maxprograms.com/products/fluenta.html) can be used at no cost for 30 days requesting a free Evaluation Key.
+Fluenta follows the workflow defined by the OASIS DITA Adoption Technical Committee. For details, see:
 
-Subscription Keys cannot be shared or transferred to different machines.
+- <https://www.maxprograms.com/articles/ditaxliff.html>
+- <https://www.ditatranslation.com/articles/ditaxliff.html>
 
-Installers may occasionally be updated before the corresponding source code changes appear in this repository. Source code updates are published later, once they are ready for release. This timing difference is expected and does not affect the availability or completeness of the open source code.
+---
 
-Subscription version includes unlimited email support at <tech@maxprograms.com>.
+## Installation
 
-### Differences sumary
+Download ready-to-use installers (recommended):
 
-Differences | From Source Code | Subscription Based
--|:----------:|:-------------:
-Ready To Use Installers| No | Yes
-Notarized macOS launcher| No | Yes
-Signed launcher and installer for Windows | No | Yes
-Headless mode batch scripts for running from CLI (Command Line Interface) | No | Yes
-Technical Support |  Peer support at  [Groups.io](https://groups.io/g/maxprograms/)| - Direct email at [tech@maxprograms.com](mailto:tech@maxprograms.com) <br> - Peer support at [Groups.io](https://groups.io/g/maxprograms/)
+👉 <https://www.maxprograms.com/products/fluentadownload.html>
 
-## Installers
+---
 
-Ready to use installers are available at [https://www.maxprograms.com/products/fluentadownload.html](https://www.maxprograms.com/products/fluentadownload.html).
+## Building from source
 
-## Building Yourself
+### Requirements
 
-You need these tools to build Fluenta:
+- Java 21 LTS (<https://adoptium.net/>)
+- Gradle 9.2 or newer (<https://gradle.org/>)
+- Node.js 24.14.0 LTS or newer (<https://nodejs.org/>)
 
-- Java 21 LTS, get it from [https://adoptium.net/](https://adoptium.net/)
-- Gradle 9.2, get it from [https://gradle.org/](https://gradle.org/)
-- NodeJS 24.14.0 LTS, get it it from [https://nodejs.org/](https://nodejs.org/)
+### Build
 
-### Building Fluenta
-
-- Checkout this repository
-- Point your `JAVA_HOME` variable to JDK 21
-- Run `gradle` to compile the Java code
-- Install the NodeJS dependencies with `npm install`
-
-```shell
+```bash
 git clone https://github.com/rmraya/Fluenta.git
 cd Fluenta
 gradle
 npm install
 ```
 
-### Running Fluenta
+### Run
 
-After building the code, you can launch fluenta with the following command:
-
-```shell
+```bash
 npm start
 ```
+
+---
+
+## Source code and subscriptions
+
+Fluenta source code is available on GitHub and can be downloaded, compiled, modified, and used free of charge.
+
+We offer subscriptions that include installers, technical support, bug fixes, and feature requests. Subscription fees support ongoing development and help maintain the quality and reliability of Fluenta.
+
+The version included in the official installers can be used with a free 30-day trial by requesting an evaluation key. After the trial period expires, a subscription is required.
+
+Subscription keys are available from the Maxprograms Online Store and cannot be shared or transferred between machines.
+
+Subscription version includes unlimited email support at [tech@maxprograms.com](mailto:tech@maxprograms.com).
+
+Installers may occasionally be updated before the corresponding source code changes appear in this repository. Source code updates are published later, once they are ready for release.
+
+---
+
+## Differences summary
+
+| Differences | Source Code | Subscription Based |
+| ----------- | :---------: | :----------------: |
+| Ready-to-use installers | No | Yes |
+| Notarized macOS launcher | No | Yes |
+| Signed launcher and installer for Windows | No | Yes |
+| Headless mode (CLI scripts) | No | Yes |
+| Technical support | Peer support at <https://groups.io/g/maxprograms/> | Email + peer support |
+
+---
 
 ## Legal
 
