@@ -55,7 +55,7 @@ Download ready-to-use installers (recommended):
 ### Build
 
 ```bash
-git clone https://github.com/rmraya/Fluenta.git
+git clone https://github.com/maxprograms-com/Fluenta.git
 cd Fluenta
 gradle
 npm install
