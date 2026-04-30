@@ -17,11 +17,11 @@
     "email": "rmraya@maxprograms.com",
     "url": "https://www.maxprograms.com"
   },
-  "homepage": "https://www.maxprograms.com/products/swordfish.html",
+  "homepage": "https://www.maxprograms.com/products/fluenta.html",
   "license": "EPL-1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rmraya/Swordfish.git"
+    "url": "https://github.com/maxprograms-com/Fluenta.git"
   },
   "devDependencies": {
     "electron": "^41.1.0",
