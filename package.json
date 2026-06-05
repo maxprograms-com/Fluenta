@@ -1,7 +1,7 @@
 {
   "name": "fluenta",
   "productName": "Fluenta",
-  "version": "5.5.0",
+  "version": "5.6.0",
   "description": "Fluenta DITA Translation Manager",
   "main": "js/fluenta.js",
   "directories": {
@@ -21,14 +21,14 @@
   "license": "EPL-1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/maxprograms-com/Fluenta.git"
+    "url": "https://github.com/maxprograms-com/fluenta.git"
   },
   "devDependencies": {
-    "electron": "^41.1.0",
-    "typescript": "^6.0.2"
+    "electron": "^42.2.0",
+    "typescript": "^6.0.3"
   },
   "dependencies": {
-    "typesbcp47": "^1.18.1",
-    "typesxml": "^1.18.0"
+    "typesbcp47": "^1.23.0",
+    "typesxml": "^2.1.0"
   }
 }

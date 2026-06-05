@@ -13,6 +13,7 @@
 import { ChildProcessWithoutNullStreams, SpawnSyncReturns, spawn, spawnSync } from "child_process";
 import { BrowserWindow, Display, IncomingMessage, IpcMainEvent, Menu, MenuItem, MessageBoxReturnValue, Rectangle, Size, app, clipboard, dialog, ipcMain, nativeTheme, net, screen, session, shell } from "electron";
 import { appendFileSync, cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from "fs";
+import { cpus } from "os";
 import { join } from 'path';
 import { Language, LanguageUtils } from "typesbcp47";
 import { ContentHandler, DOMBuilder, Indenter, SAXParser, TextNode, XMLAttribute, XMLDocument, XMLDocumentType, XMLElement, XMLNode, XMLWriter } from "typesxml";
@@ -23,7 +24,6 @@ import { Memory } from "./memory.js";
 import { MessageTypes } from "./messageTypes.js";
 import { Preferences } from "./preferences.js";
 import { Project } from "./project.js";
-import { cpus } from "os";
 
 export class Fluenta {
 
@@ -858,12 +858,14 @@ export class Fluenta {
         Fluenta.logsDialogWindow.once('ready-to-show', () => {
             Fluenta.logsDialogWindow.show();
             Fluenta.cancelledProcess = false;
+            const env: NodeJS.ProcessEnv = { ...process.env };
+            delete env._JAVA_OPTIONS;
             let javapath: string = process.platform === 'win32' ? join(app.getAppPath(), 'bin', 'java.exe') : join(app.getAppPath(), 'bin', 'java');
             let javaParams: string[] = ['--module-path', 'lib', '-m', 'fluenta/com.maxprograms.fluenta.CLI', '-verbose', '-lang', Fluenta.preferences.lang];
             for (let param of params) {
                 javaParams.push(param);
             }
-            Fluenta.javaProcess = spawn(javapath, javaParams, { cwd: app.getAppPath(), windowsHide: true });
+            Fluenta.javaProcess = spawn(javapath, javaParams, { cwd: app.getAppPath(), windowsHide: true, env: env });
             Fluenta.javaProcess.stdout.on('data', (data: Buffer) => {
                 if (Fluenta.logsDialogWindow?.isVisible()) {
                     Fluenta.logsDialogWindow.webContents.send('set-data', data.toString());
@@ -2355,12 +2357,14 @@ export class Fluenta {
 
     static runJava(arg: string[]): string {
         Fluenta.javaErrors = false;
+        const env: NodeJS.ProcessEnv = { ...process.env };
+        delete env._JAVA_OPTIONS;
         let javapath: string = process.platform === 'win32' ? join(app.getAppPath(), 'bin', 'java.exe') : join(app.getAppPath(), 'bin', 'java');
         let params: string[] = ['--module-path', 'lib', '-m', 'fluenta/com.maxprograms.fluenta.CLI'];
         if (arg) {
             params = params.concat(arg);
         }
-        let ls: SpawnSyncReturns<Buffer> = spawnSync(javapath, params, { cwd: app.getAppPath(), windowsHide: true });
+        let ls: SpawnSyncReturns<Buffer> = spawnSync(javapath, params, { cwd: app.getAppPath(), windowsHide: true, env: env });
         let stdout: Buffer = ls.stdout;
         let stderr: Buffer = ls.stderr;
         if (stderr.length > 0) {

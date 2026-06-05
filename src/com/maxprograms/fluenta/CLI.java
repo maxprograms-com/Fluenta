@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Locale;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -70,6 +71,9 @@ public class CLI {
 		}
 
 		for (int i = 0; i < args.length; i++) {
+			if (args[i].equals("-lang") && (i + 1) < args.length) {
+				Locale.setDefault(Locale.forLanguageTag(args[i + 1]));
+			}
 			if (args[i].equals("-version")) {
 				JSONObject json = new JSONObject();
 				json.put("version", Constants.VERSION);
