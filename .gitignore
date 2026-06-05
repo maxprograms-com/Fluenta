@@ -1,9 +1,11 @@
 .DS_Store
+.github
 .vscode
 .gradle/
 jars/fluenta.jar
 out
 bin
+build
 conf
 include
 legal
